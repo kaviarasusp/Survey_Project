@@ -37,7 +37,7 @@ a { color: var(--accent); }
 .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
 .demo-tag { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; background: var(--warn-soft); color: var(--warn-ink); }
 .topbar-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.tenant { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.tenant { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 13px; color: var(--muted); }
 .tenant select { min-height: 38px; }
 .storage-badge { font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); }
 .storage-badge.local { background: var(--warn-soft); color: var(--warn-ink); }
@@ -184,3 +184,26 @@ pre.xml { margin: 0; max-height: 620px; overflow: auto; padding: 16px; border-ra
   .page-head h1 { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+.card.editing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+/* Surveys tab */
+.survey-btn { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding: 10px 12px; text-align: left; }
+.survey-btn-title { font-size: 14px; line-height: 1.35; }
+.qitem.qitem-edit { grid-template-columns: 26px minmax(0, 1fr) auto; }
+.q-tools { display: flex; gap: 2px; }
+.icon-btn:disabled { opacity: .3; cursor: default; }
+.qlist.qlist-full { max-height: none; overflow: visible; }
+
+/* Search explanation */
+.search-explain { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.soft-tag { background: var(--accent-soft); color: var(--accent-ink); }
+.match-why { display: block; margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+/* Question library actions */
+.q-actions { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.badge.retired { background: #E9E2DA; color: #6B4E2E; }
+.qcard.is-retired p { color: var(--muted); }
+.confirm-box { margin-top: 10px; }
+.confirm-box .actions { margin-top: 8px; justify-content: flex-start; }
+@media (max-width: 640px) { .qcard { flex-direction: column; } .q-actions { flex-direction: row; flex-wrap: wrap; } }

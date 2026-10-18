@@ -28,6 +28,17 @@ const Store = (() => {
     return res.text();
   }
 
+  // data/<name>.xml, or the built-in copy when the page is opened from disk.
+  async function seedText(name) {
+    try {
+      return await fetchText(`data/${name}.xml`);
+    } catch (err) {
+      const builtIn = window.A4U_SEED && window.A4U_SEED[name];
+      if (builtIn) return builtIn;
+      throw err;
+    }
+  }
+
   async function detectMode() {
     try {
       const res = await fetch('api/xml?name=status', { cache: 'no-store' });
@@ -39,7 +50,7 @@ const Store = (() => {
     }
   }
 
-  const seed = async (name) => parse(await fetchText(`data/${name}.xml`));
+  const seed = async (name) => parse(await seedText(name));
 
   async function loadShared(name) {
     const res = await fetch(`api/xml?name=${name}`, { cache: 'no-store' });
@@ -89,7 +100,7 @@ const Store = (() => {
 
   async function init() {
     mode = await detectMode();
-    lookups = parse(await fetchText('data/lookups.xml'));
+    lookups = parse(await seedText('lookups'));
     await refresh();
   }
 

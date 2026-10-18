@@ -38,22 +38,24 @@
 
   function buildLookups(doc) {
     const root = doc.documentElement;
+    const syns = (el) => attr(el, 'synonyms').split('|').map((x) => x.trim()).filter(Boolean);
     const facets = {};
     kids(root, 'facet').forEach((f) => {
-      facets[attr(f, 'code')] = kids(f, 'value').map((v) => ({ code: attr(v, 'code'), label: v.textContent.trim(), el: v }));
+      facets[attr(f, 'code')] = kids(f, 'value').map((v) => ({ code: attr(v, 'code'), label: v.textContent.trim(), el: v, synonyms: syns(v) }));
     });
     const themes = kids(kids(root, 'themes')[0], 'theme').map((t) => ({
       code: attr(t, 'code'),
       label: attr(t, 'label'),
+      synonyms: syns(t),
       subs: kids(t, 'subtheme').map((s) => ({
         code: attr(s, 'code'), label: s.textContent.trim(), theme: attr(t, 'code'),
-        synonyms: attr(s, 'synonyms').split('|').filter(Boolean),
+        synonyms: syns(s),
       })),
     }));
     const sub = {};
     themes.forEach((t) => t.subs.forEach((s) => { sub[s.code] = s; }));
     const problems = kids(kids(root, 'problems')[0], 'problem').map((p) => ({
-      code: attr(p, 'code'), label: attr(p, 'label'),
+      code: attr(p, 'code'), label: attr(p, 'label'), synonyms: syns(p),
       links: kids(p, 'link').map((l) => ({ sub: attr(l, 'subtheme'), weight: Number(attr(l, 'weight', '1')) })),
     }));
     const links = kids(kids(root, 'links')[0], 'link').map((l) => ({ type: attr(l, 'type'), from: attr(l, 'from'), to: words(attr(l, 'to')) }));
@@ -110,7 +112,7 @@
       const fu = kids(q, 'followUp')[0];
       return {
         id: attr(q, 'id'), status: attr(q, 'status'), type: attr(q, 'type'), scale: attr(q, 'scale'), framework: attr(q, 'framework'),
-        primary: attr(q, 'primary'), owner: attr(q, 'owner'), benchmark: attr(q, 'benchmark') === 'true', createdAt: attr(q, 'createdAt'),
+        primary: attr(q, 'primary'), owner: attr(q, 'owner'), benchmark: attr(q, 'benchmark') === 'true', createdAt: attr(q, 'createdAt'), updatedAt: attr(q, 'updatedAt'),
         text: (kids(q, 'text')[0] || { textContent: '' }).textContent.trim(),
         tags, options: kids(q, 'option').map((o) => o.textContent.trim()),
         followUp: fu ? { max: Number(attr(fu, 'max')), text: fu.textContent.trim() } : null,
@@ -123,6 +125,11 @@
       id: attr(s, 'id'), title: attr(s, 'title'), customer: attr(s, 'customer'), client: attr(s, 'client'), goal: attr(s, 'goal'),
       stage: attr(s, 'stage'), length: attr(s, 'length'), createdAt: attr(s, 'createdAt'), status: attr(s, 'status'),
       questions: kids(s, 'question').length, recipients: kids(s, 'recipient').length,
+      lobToken: attr(s, 'lobToken'), includeNps: attr(s, 'includeNps') === 'true', updatedAt: attr(s, 'updatedAt'),
+      questionRefs: kids(s, 'question').sort((a, b) => Number(attr(a, 'position')) - Number(attr(b, 'position'))).map((q) => attr(q, 'ref')),
+      roles: kids(s, 'role').map((r) => attr(r, 'code')),
+      themes: kids(s, 'theme').map((t) => attr(t, 'code')),
+      engagementRefs: kids(s, 'engagement').map((e) => attr(e, 'ref')),
     }));
   }
 
@@ -151,14 +158,20 @@
   }
 
   // ---------- app state ----------
-  const App = { tenant: '', tab: 'survey' };
+  const ADMIN = 'admin';
+  const App = { tenant: '', workCustomer: '', tab: 'survey' };
+  const isAdmin = () => App.tenant === ADMIN;
+  // Admin sees every tab; a customer sees only its own surveys and clients.
+  const allowedTabs = () => (isAdmin() ? ['survey', 'surveys', 'customers', 'questions', 'data'] : ['survey', 'surveys', 'customers']);
+  const V = { selected: '', client: '', draft: null, search: '', theme: '', type: '', fitOnly: true }; // surveys tab
   let S = { clientId: '' };          // survey being built
   const C = { selected: '', showForm: false, form: null, confirmReset: false }; // customers tab
-  const Q = { search: '', theme: '', showForm: false, form: null };           // question library
+  const Q = { search: '', theme: '', status: 'active', showForm: false, form: null, confirm: null }; // confirm: { id, action }           // question library
   const D = { file: 'customers', confirmReset: false };                        // XML data tab
 
   const customers = () => readCustomers();
-  const currentCustomer = () => customers().find((c) => c.id === App.tenant);
+  // The customer whose data the screens show: the signed-in customer, or the one Admin is working on.
+  const currentCustomer = () => customers().find((c) => c.id === (isAdmin() ? App.workCustomer : App.tenant));
 
   // ======================================================================
   // NEW SURVEY
@@ -506,7 +519,7 @@
       <h2>Saved surveys for ${esc(customer.name)}</h2>
       ${list.length ? `<div class="table-wrap"><table>
         <thead><tr><th scope="col">Title</th><th scope="col">Client</th><th scope="col">Goal</th><th scope="col">Questions</th><th scope="col">Invites</th><th scope="col">Created</th></tr></thead>
-        <tbody>${list.slice().reverse().map((s) => `<tr><td>${esc(s.title)}</td><td>${esc(names[s.client] || s.client)}</td>
+        <tbody>${list.slice().reverse().map((s) => `<tr><td><button type="button" class="btn link" style="padding:0;text-align:left" data-act="open-survey" data-id="${esc(s.id)}">${esc(s.title)}</button></td><td>${esc(names[s.client] || s.client)}</td>
           <td>${esc(label('survey_goal', s.goal))}</td><td>${s.questions}</td><td>${s.recipients}</td><td>${esc(s.createdAt)}</td></tr>`).join('')}</tbody>
       </table></div>` : '<p class="hint">No surveys saved yet. Saved surveys are written to <code>surveys.xml</code>.</p>'}
     </div>`;
@@ -544,8 +557,8 @@
         rec.list.forEach((p, i) => add('question', { ref: p.q.id, position: String(i + 1), subtheme: p.q.primary }));
         doc.documentElement.appendChild(s);
       });
-      toast('Survey saved to surveys.xml.');
-      renderSurvey();
+      toast('Survey saved. Open the Surveys tab to review or edit its questions.');
+      renderSurvey(); renderSurveys();
     } catch (e) {
       toast(`Could not save the survey: ${e.message}`, true);
       if (btn) btn.disabled = false;
@@ -562,9 +575,9 @@
     if (ev.type === 'input') { if (act === 'title') S.title = t.value; return; }
     if (ev.type === 'click') {
       if (act === 'remove') S.removed.add(t.dataset.id);
-      else if (act === 'restore') S.removed.clear();
-      else if (act === 'restart') S = newSurveyState(client);
+      else if (act === 'restore') S.removed.clear();      else if (act === 'restart') S = newSurveyState(client);
       else if (act === 'save') { saveSurvey(); return; }
+      else if (act === 'open-survey') { V.selected = t.dataset.id; V.draft = null; renderSurveys(); showTab('surveys'); return; }
       else return;
       keepFocus(renderSurvey);
       return;
@@ -589,18 +602,264 @@
   }
 
   // ======================================================================
+  // SURVEYS (saved surveys for a customer; edit the question list)
+  // ======================================================================
+  const sameList = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+  // Context of a saved survey, used to fill tokens and to check which library questions fit it.
+  function savedSurveyContext(sv, customer) {
+    const client = customer.clients.find((c) => c.id === sv.client) || { name: '(client removed)', engagements: [], industry: '' };
+    const engs = client.engagements.filter((e) => sv.engagementRefs.includes(e.id));
+    return {
+      customer, client, lobToken: sv.lobToken || 'your services',
+      goal: sv.goal, stage: sv.stage, roles: sv.roles, industry: client.industry,
+      models: [...new Set(engs.map((e) => e.model))],
+      workTypes: [...new Set(engs.map((e) => e.workType))],
+      serviceLines: [...new Set(engs.flatMap((e) => e.serviceLines))],
+    };
+  }
+
+  function fitsSavedSurvey(q, ctx) {
+    const fits = (facet, values) => { const t = q.tags[facet]; return !t || !t.length || t.some((v) => values.includes(v)); };
+    return fits('survey_goal', [ctx.goal]) && fits('respondent_role', ctx.roles) && fits('industry', [ctx.industry])
+      && fits('engagement_model', ctx.models) && fits('work_type', ctx.workTypes)
+      && fits('lifecycle_stage', [ctx.stage]) && fits('service_line', ctx.serviceLines);
+  }
+
+  function renderSurveys() {
+    const el = $('#tab-surveys');
+    const customer = currentCustomer();
+    if (!customer) { el.innerHTML = '<div class="card"><p>No customers yet.</p></div>'; return; }
+    const all = readSurveys().filter((s) => s.customer === customer.id);
+    if (V.selected && !all.some((s) => s.id === V.selected)) { V.selected = ''; V.draft = null; }
+    if (V.client && !customer.clients.some((c) => c.id === V.client)) V.client = '';
+    const list = (V.client ? all.filter((s) => s.client === V.client) : all).slice().reverse();
+    const clientName = (id) => (customer.clients.find((c) => c.id === id) || {}).name || id;
+    const sel = all.find((s) => s.id === V.selected);
+
+    el.innerHTML = `
+      <div class="page-head">
+        <div><h1>Surveys</h1><p>Every survey saved for <strong>${esc(customer.name)}</strong>. Open one to review its questions, add more from the library or remove the ones you don't need. Saved to <code>surveys.xml</code>.</p></div>
+        <button type="button" class="btn primary" data-act="v-new">+ New survey</button>
+      </div>
+      <div class="cols">
+        <div class="col-narrow">
+          <div class="card">
+            <h2>Saved surveys</h2>
+            <div class="field">
+              <label class="label" for="v-client">Client</label>
+              <select id="v-client" data-act="v-client">${optionList(customer.clients.map((c) => ({ code: c.id, label: c.name })), V.client, 'All clients')}</select>
+            </div>
+            <div class="cust-list" style="margin-top:12px">
+              ${list.map((s) => `<button type="button" class="cust-btn survey-btn" data-act="v-pick" data-id="${esc(s.id)}"${s.id === V.selected ? ' aria-current="true"' : ''}>
+                <span class="survey-btn-title">${esc(s.title)}</span>
+                <span class="hint">${esc(clientName(s.client))} · ${s.questions} questions · ${esc(s.updatedAt || s.createdAt)}</span></button>`).join('')
+                || `<p class="hint">No surveys saved${V.client ? ' for this client' : ''} yet. Create one on <strong>New survey</strong>.</p>`}
+            </div>
+          </div>
+        </div>
+        <div class="col-main">
+          ${sel ? surveyDetail(sel, customer) : `<div class="card"><p class="hint">${all.length ? 'Select a survey on the left to see its questions.' : 'Saved surveys will appear here.'}</p></div>`}
+        </div>
+      </div>`;
+    renderAddResults();
+  }
+
+  function surveyDetail(sv, customer) {
+    const ctx = savedSurveyContext(sv, customer);
+    const qmap = new Map(readQuestions().map((q) => [q.id, q]));
+    const refs = V.draft || sv.questionRefs;
+    const dirty = Boolean(V.draft) && !sameList(V.draft, sv.questionRefs);
+    const totalSec = refs.reduce((n, id) => n + (qmap.get(id) ? seconds(qmap.get(id)) : 0), 0);
+    return `
+      <div class="card">
+        <div class="row-head" style="align-items:flex-start">
+          <div style="min-width:0"><h2 style="margin-bottom:6px">${esc(sv.title)}</h2>
+            <div class="tags">
+              <span class="tag theme">${esc(ctx.client.name)}</span>
+              <span class="tag">${esc(label('survey_goal', sv.goal))}</span>
+              ${stageBadge(sv.stage)}
+              <span class="tag">${sv.recipients} invite${sv.recipients === 1 ? '' : 's'}</span>
+              <span class="badge grey">${esc(sv.status || 'draft')}</span>
+            </div>
+          </div>
+          <div class="stats" style="flex:none">
+            <div class="stat"><b>${refs.length}</b><span>questions</span></div>
+            <div class="stat"><b>~${Math.max(1, Math.ceil(totalSec / 60))}</b><span>minutes</span></div>
+          </div>
+        </div>
+        <h3 style="margin:16px 0 8px">Questions in this survey</h3>
+        <div class="qlist qlist-full">
+          ${refs.map((id, i) => {
+            const q = qmap.get(id);
+            const text = q ? fillTokens(q.text, ctx) : `<em>Question ${esc(id)} is no longer in the library</em>`;
+            const meta = q ? `${q.framework === 'nps' ? 'NPS' : subLabel(q.primary)} · ${typeLabel(q.type)}${q.status === 'retired' ? ' · retired in the library' : ''}` : '';
+            return `<div class="qitem qitem-edit"><span class="n">${i + 1}</span>
+              <span>${text}<span class="meta">${esc(meta)}</span></span>
+              <span class="q-tools">
+                <button type="button" class="icon-btn" id="v-up-${i}" data-act="v-up" data-i="${i}" aria-label="Move question ${i + 1} up"${i === 0 ? ' disabled' : ''}>↑</button>
+                <button type="button" class="icon-btn" id="v-down-${i}" data-act="v-down" data-i="${i}" aria-label="Move question ${i + 1} down"${i === refs.length - 1 ? ' disabled' : ''}>↓</button>
+                <button type="button" class="icon-btn" data-act="v-remove" data-i="${i}" aria-label="Remove question ${i + 1}">×</button>
+              </span></div>`;
+          }).join('') || '<p class="hint">No questions. Add some below.</p>'}
+        </div>
+        <div class="actions">
+          ${dirty ? '<span class="note warn" style="margin-right:auto;padding:6px 10px">Unsaved changes</span>' : ''}
+          <button type="button" class="btn" data-act="v-discard"${dirty ? '' : ' disabled'}>Discard changes</button>
+          <button type="button" class="btn primary" id="v-save" data-act="v-save"${dirty ? '' : ' disabled'}>Save changes</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Add questions</h2>
+        <p class="sub">Search the question library. Platform questions and ${esc(customer.name)}'s private questions are listed; questions already in the survey are hidden.</p>
+        <div class="grid">
+          <div class="field"><label class="label" for="v-search">Search</label>
+            <input type="search" id="v-search" data-act="v-search" value="${esc(V.search)}" placeholder="Keyword or synonym, e.g. QBR, ticket turnaround, insurance, T&amp;M"></div>
+          <div class="field"><label class="label" for="v-theme">Theme</label>
+            <select id="v-theme" data-act="v-theme">${optionList(LK.themes.map((t) => ({ code: t.code, label: t.label })), V.theme, 'All themes')}</select></div>
+          <div class="field"><label class="label" for="v-type">Question type</label>
+            <select id="v-type" data-act="v-type">${optionList(QTYPES, V.type, 'All types')}</select></div>
+        </div>
+        <p style="margin-top:6px"><span class="hint">Searches question text plus the search synonyms of themes, sub-themes, concerns, industries, goals, roles, service lines, engagement models, types of work and lifecycle stages.</span></p>
+        <div class="chips" style="margin-top:10px">${chip('v-fit', 'v-fit', 'fit', V.fitOnly, 'Only questions that fit this survey')}</div>
+        <span class="hint">Fits = matches the survey's goal, lifecycle stage, respondent roles, the client's industry and the engagements in scope.</span>
+        <div id="v-add-results" style="margin-top:14px"></div>
+      </div>`;
+  }
+
+  function renderAddResults() {
+    const box = $('#v-add-results');
+    const customer = currentCustomer();
+    const sv = customer && readSurveys().find((s) => s.id === V.selected);
+    if (!box || !sv) return;
+    const ctx = savedSurveyContext(sv, customer);
+    const inSurvey = new Set(V.draft || sv.questionRefs);
+    const pool = readQuestions().filter((q) => q.status === 'published' && (!q.owner || q.owner === customer.id) && !inSurvey.has(q.id));
+    const filtered = pool.filter((q) => (!V.type || q.type === V.type) && (!V.fitOnly || fitsSavedSurvey(q, ctx)));
+    const matches = searchQuestions(filtered, V.search, V.theme);
+    const shown = matches.slice(0, 40);
+    box.innerHTML = `${searchExplain(V.search)}<p class="hint" style="margin-bottom:10px">${matches.length} question${matches.length === 1 ? '' : 's'} found${matches.length > shown.length ? `, showing the first ${shown.length}` : ''}.</p>
+      <div class="list">${shown.map(({ q, reasons }) => `
+        <div class="qcard">
+          <div style="min-width:0;flex:1"><p>${fillTokens(q.text, ctx)}</p>
+            <div class="tags"><span class="tag theme">${esc(q.framework === 'nps' ? 'NPS' : subLabel(q.primary))}</span><span class="tag">${esc(typeLabel(q.type))}</span>
+            ${q.owner ? '<span class="badge warn">Private</span>' : ''}</div>${reasonLine({ reasons })}</div>
+          <button type="button" class="btn small" data-act="v-add" data-id="${esc(q.id)}" aria-label="Add question to the survey">+ Add</button>
+        </div>`).join('') || `<p class="hint">No questions match.${V.fitOnly ? ' Try turning off “Only questions that fit this survey”.' : ''}</p>`}</div>`;
+  }
+
+  async function saveSurveyQuestions() {
+    const customer = currentCustomer();
+    const sv = customer && readSurveys().find((s) => s.id === V.selected);
+    if (!sv || !V.draft) return;
+    if (!V.draft.length) { toast('A survey needs at least one question.', true); return; }
+    const qmap = new Map(readQuestions().map((q) => [q.id, q]));
+    const btn = $('#v-save'); if (btn) btn.disabled = true;
+    try {
+      await Store.mutate('surveys', (doc) => {
+        const s = kids(doc.documentElement, 'survey').find((x) => attr(x, 'id') === sv.id);
+        if (!s) throw new Error('This survey was removed by someone else.');
+        kids(s, 'question').forEach((q) => s.removeChild(q));
+        V.draft.forEach((id, i) => {
+          const q = doc.createElement('question');
+          q.setAttribute('ref', id); q.setAttribute('position', String(i + 1));
+          q.setAttribute('subtheme', (qmap.get(id) || {}).primary || '');
+          s.appendChild(q);
+        });
+        s.setAttribute('updatedAt', new Date().toISOString().slice(0, 10));
+      });
+      V.draft = null;
+      toast('Survey questions saved to surveys.xml.');
+      renderSurveys(); renderSurvey();
+    } catch (e) {
+      toast(`Could not save the survey: ${e.message}`, true);
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  function onSurveysEvent(ev) {
+    const t = ev.target;
+    const act = t.dataset && t.dataset.act;
+    if (ev.type === 'input') { if (act === 'v-search') { V.search = t.value; renderAddResults(); } return; }
+    if (ev.type === 'change') {
+      if (act === 'v-client') { V.client = t.value; V.selected = ''; V.draft = null; keepFocus(renderSurveys); }
+      else if (act === 'v-theme') { V.theme = t.value; renderAddResults(); }
+      else if (act === 'v-type') { V.type = t.value; renderAddResults(); }
+      else if (act === 'v-fit') { V.fitOnly = t.checked; renderAddResults(); }
+      return;
+    }
+    if (ev.type !== 'click') return;
+    const b = t.closest('[data-act]');
+    if (!b) return;
+    const customer = currentCustomer();
+    const sv = customer && readSurveys().find((s) => s.id === V.selected);
+    const draft = () => { if (!V.draft) V.draft = [...sv.questionRefs]; return V.draft; };
+    const i = Number(b.dataset.i);
+    switch (b.dataset.act) {
+      case 'v-new': showTab('survey'); return;
+      case 'v-pick':
+        if (V.draft && sv && !sameList(V.draft, sv.questionRefs) && b.dataset.id !== V.selected) toast('Unsaved changes to the previous survey were discarded.');
+        if (b.dataset.id !== V.selected) { V.selected = b.dataset.id; V.draft = null; }
+        break;
+      case 'v-up': if (sv && i > 0) { const d = draft(); [d[i - 1], d[i]] = [d[i], d[i - 1]]; } break;
+      case 'v-down': if (sv) { const d = draft(); if (i < d.length - 1) [d[i + 1], d[i]] = [d[i], d[i + 1]]; } break;
+      case 'v-remove': if (sv) draft().splice(i, 1); break;
+      case 'v-add': {
+        if (!sv) return;
+        const d = draft();
+        const qmap = new Map(readQuestions().map((q) => [q.id, q]));
+        const last = qmap.get(d[d.length - 1]);
+        // Keep the open-ended question at the end.
+        if (last && last.type === 'open_text') d.splice(d.length - 1, 0, b.dataset.id); else d.push(b.dataset.id);
+        toast('Question added. Save changes to keep it.');
+        break;
+      }
+      case 'v-discard': V.draft = null; break;
+      case 'v-save': saveSurveyQuestions(); return;
+      default: return;
+    }
+    keepFocus(renderSurveys);
+  }
+
+  // ======================================================================
   // CUSTOMERS & CLIENTS
   // ======================================================================
   let rowKey = 0;
   const newEng = () => ({ key: ++rowKey, lob: '', model: 'managed_services', workType: 'run', start: '', end: '', reference: '', description: '', serviceLines: [] });
   const newContact = () => ({ key: ++rowKey, name: '', email: '', role: 'it_head', lob: '' });
-  const newClientForm = () => ({ name: '', industry: '', tier: 'key', owner: '', lobs: [], lobDraft: '', engagements: [newEng()], contacts: [newContact()], errors: [] });
+  const newClientForm = () => ({ editId: '', name: '', industry: '', tier: 'key', owner: '', lobs: [], lobDraft: '', engagements: [newEng()], contacts: [newContact()], errors: [] });
+
+  // Pre-fill the form from an existing client. Existing IDs are kept so saved surveys still point at the same engagements and contacts.
+  function editClientForm(cl) {
+    const lobKey = {};
+    const lobs = cl.lobs.map((l) => { const key = ++rowKey; lobKey[l.id] = String(key); return { key, id: l.id, name: l.name }; });
+    return {
+      editId: cl.id, name: cl.name, industry: cl.industry, tier: cl.tier, owner: cl.owner || '', lobs, lobDraft: '',
+      engagements: cl.engagements.map((e) => ({
+        key: ++rowKey, id: e.id, lob: lobKey[e.lob] || '', model: e.model, workType: e.workType,
+        start: e.start, end: e.end, reference: e.reference || '', description: e.description || '', serviceLines: [...e.serviceLines],
+      })),
+      contacts: cl.contacts.map((p) => ({ key: ++rowKey, id: p.id, name: p.name, email: p.email, role: p.role, lob: p.lob ? (lobKey[p.lob] || '') : '' })),
+      errors: [],
+    };
+  }
 
   function renderCustomers() {
     const el = $('#tab-customers');
     const list = customers();
+    if (!isAdmin()) C.selected = App.tenant;
     if (!list.find((c) => c.id === C.selected)) C.selected = list[0] ? list[0].id : '';
     const cust = list.find((c) => c.id === C.selected);
+
+    if (!isAdmin()) {
+      el.innerHTML = `
+        <div class="page-head">
+          <div><h1>Clients</h1><p>${esc(cust ? cust.name : '')}'s clients, their lines of business, engagements and contacts. Saved to <code>customers.xml</code>.</p></div>
+        </div>
+        ${cust ? customerPanel(cust) : ''}`;
+      return;
+    }
 
     el.innerHTML = `
       <div class="page-head">
@@ -632,14 +891,14 @@
 
   function customerPanel(cust) {
     return `
-      ${C.showForm ? clientForm(cust) : ''}
+      ${C.showForm && !C.form.editId ? clientForm(cust) : ''}
       <div class="card">
         <div class="page-head" style="margin-bottom:14px">
           <div><h2 style="margin:0">${esc(cust.name)}</h2><p class="hint">${cust.clients.length} client${cust.clients.length === 1 ? '' : 's'}</p></div>
           ${C.showForm ? '' : '<button type="button" class="btn primary" data-act="open-client-form">+ Add client</button>'}
         </div>
         <div class="list" style="gap:14px">
-          ${cust.clients.map(clientCard).join('') || '<p class="hint">No clients yet.</p>'}
+          ${cust.clients.map((cl) => (C.showForm && C.form.editId === cl.id ? clientForm(cust) : clientCard(cl))).join('') || '<p class="hint">No clients yet.</p>'}
         </div>
       </div>`;
   }
@@ -649,7 +908,8 @@
     return `<div class="client-card">
       <div class="client-head">
         <h3>${esc(cl.name)}</h3>
-        <div class="tags"><span class="tag theme">${esc(label('industry', cl.industry))}</span><span class="tag">${esc((LK.tiers[cl.tier] || {}).label || cl.tier)}</span>${cl.owner ? `<span class="tag">Owner: ${esc(cl.owner)}</span>` : ''}</div>
+        <div class="tags"><span class="tag theme">${esc(label('industry', cl.industry))}</span><span class="tag">${esc((LK.tiers[cl.tier] || {}).label || cl.tier)}</span>${cl.owner ? `<span class="tag">Owner: ${esc(cl.owner)}</span>` : ''}
+          ${C.showForm ? '' : `<button type="button" class="btn small" data-act="edit-client" data-id="${esc(cl.id)}" aria-label="Edit ${esc(cl.name)}">Edit</button>`}</div>
       </div>
       <div class="tags"><span class="hint">Lines of business:</span>${cl.lobs.map((l) => `<span class="tag">${esc(l.name)}</span>`).join('') || '<span class="hint">none</span>'}</div>
       <div class="table-wrap"><table>
@@ -669,9 +929,12 @@
     const f = C.form;
     const lobOptions = (sel, allowAll) => (allowAll ? `<option value=""${sel === '' ? ' selected' : ''}>All lines of business</option>` : `<option value="">Choose…</option>`)
       + f.lobs.map((l) => `<option value="${esc(l.key)}"${String(l.key) === String(sel) ? ' selected' : ''}>${esc(l.name)}</option>`).join('');
-    return `<div class="card" id="client-form-card">
-      <h2>Add a client to ${esc(cust.name)}</h2>
-      <p class="sub">Required fields are marked <span class="req">*</span>. The client is saved to <code>customers.xml</code> under this customer.</p>
+    const editing = Boolean(f.editId);
+    return `<div class="card${editing ? ' editing' : ''}" id="client-form-card">
+      <h2>${editing ? `Edit ${esc(f.name || 'client')}` : `Add a client to ${esc(cust.name)}`}</h2>
+      <p class="sub">Required fields are marked <span class="req">*</span>. ${editing
+        ? 'Changes update this client in <code>customers.xml</code>. Saved surveys keep pointing at the same engagements and contacts.'
+        : 'The client is saved to <code>customers.xml</code> under this customer.'}</p>
       ${f.errors.length ? `<div class="note warn" role="alert" style="margin-bottom:14px"><strong>Fix these to save:</strong><br>${f.errors.map(esc).join('<br>')}</div>` : ''}
       <div class="grid">
         <div class="field"><label class="label" for="cf-name">Client name <span class="req">*</span></label>
@@ -729,7 +992,7 @@
 
       <div class="actions">
         <button type="button" class="btn" data-act="cancel-client">Cancel</button>
-        <button type="button" class="btn primary" id="cf-save" data-act="save-client">Save client</button>
+        <button type="button" class="btn primary" id="cf-save" data-act="save-client">${editing ? 'Save changes' : 'Save client'}</button>
       </div>
     </div>`;
   }
@@ -745,7 +1008,7 @@
   function validateClient(f, cust) {
     const errs = [];
     if (!f.name.trim()) errs.push('Enter the client name.');
-    else if (cust.clients.some((c) => c.name.toLowerCase() === f.name.trim().toLowerCase())) errs.push(`${cust.name} already has a client called “${f.name.trim()}”.`);
+    else if (cust.clients.some((c) => c.id !== f.editId && c.name.toLowerCase() === f.name.trim().toLowerCase())) errs.push(`${cust.name} already has a client called “${f.name.trim()}”.`);
     if (!f.industry) errs.push('Choose an industry.');
     if (!f.lobs.length) errs.push('Add at least one line of business.');
     f.engagements.forEach((e, i) => {
@@ -774,28 +1037,41 @@
     const btn = $('#cf-save'); if (btn) btn.disabled = true;
     try {
       const name = f.name.trim();
+      const today = new Date().toISOString().slice(0, 10);
       await Store.mutate('customers', (doc) => {
         const custEl = kids(doc.documentElement, 'customer').find((c) => attr(c, 'id') === cust.id);
         if (!custEl) throw new Error('That customer no longer exists.');
-        if (kids(custEl, 'client').some((c) => attr(c, 'name').toLowerCase() === name.toLowerCase())) throw new Error(`A client called “${name}” was just added by someone else.`);
+        const existing = f.editId ? kids(custEl, 'client').find((c) => attr(c, 'id') === f.editId) : null;
+        if (f.editId && !existing) throw new Error('This client was removed by someone else.');
+        if (kids(custEl, 'client').some((c) => c !== existing && attr(c, 'name').toLowerCase() === name.toLowerCase())) throw new Error(`A client called “${name}” was just added by someone else.`);
         const el = (tag, attrs, text) => { const n = doc.createElement(tag); Object.entries(attrs).forEach(([k, v]) => { if (v !== '' && v != null) n.setAttribute(k, v); }); if (text != null) n.textContent = text; return n; };
-        const client = el('client', { id: Store.newId('cli'), name, industry: f.industry, tier: f.tier, owner: f.owner.trim(), createdAt: new Date().toISOString().slice(0, 10) });
+        const client = el('client', {
+          id: f.editId || Store.newId('cli'), name, industry: f.industry, tier: f.tier, owner: f.owner.trim(),
+          createdAt: existing ? attr(existing, 'createdAt') : today, updatedAt: existing ? today : '',
+        });
         const lobIds = {};
-        f.lobs.forEach((l) => { const id = Store.newId('lob'); lobIds[l.key] = id; client.appendChild(el('lob', { id }, l.name)); });
+        f.lobs.forEach((l) => { const id = l.id || Store.newId('lob'); lobIds[l.key] = id; client.appendChild(el('lob', { id }, l.name)); });
         f.engagements.forEach((e) => {
-          const eng = el('engagement', { id: Store.newId('eng'), lob: lobIds[e.lob], model: e.model, workType: e.workType, start: e.start, end: e.end, reference: e.reference.trim() });
+          const eng = el('engagement', { id: e.id || Store.newId('eng'), lob: lobIds[e.lob], model: e.model, workType: e.workType, start: e.start, end: e.end, reference: e.reference.trim(), description: (e.description || '').trim() });
           e.serviceLines.forEach((s) => eng.appendChild(el('serviceLine', { code: s })));
           client.appendChild(eng);
         });
         f.contacts.forEach((p) => {
-          const c = el('contact', { id: Store.newId('con'), name: p.name.trim(), email: p.email.trim(), role: p.role });
+          const c = el('contact', { id: p.id || Store.newId('con'), name: p.name.trim(), email: p.email.trim(), role: p.role });
           c.setAttribute('lob', p.lob ? lobIds[p.lob] : '');
           client.appendChild(c);
         });
-        custEl.appendChild(client);
+        if (existing) custEl.replaceChild(client, existing);
+        else custEl.appendChild(client);
       });
+      const editedId = f.editId;
       C.showForm = false; C.form = null;
-      toast(`${name} added to customers.xml.`);
+      toast(editedId ? `${name} updated in customers.xml.` : `${name} added to customers.xml.`);
+      // A survey in progress for this client is rebuilt so it picks up the changes.
+      if (editedId && S.clientId === editedId) {
+        const updated = (currentCustomer() || { clients: [] }).clients.find((c) => c.id === editedId);
+        if (updated) S = newSurveyState(updated);
+      }
       renderAll();
     } catch (e) {
       toast(`Could not save the client: ${e.message}`, true);
@@ -815,7 +1091,7 @@
         c.setAttribute('id', id); c.setAttribute('name', clean); c.setAttribute('createdAt', new Date().toISOString().slice(0, 10));
         doc.documentElement.appendChild(c);
       });
-      C.selected = id; C.showForm = false;
+      C.selected = id; C.showForm = false; App.workCustomer = id; onWorkCustomerChanged();
       toast(`${clean} added to customers.xml.`);
       renderAll();
     } catch (e) {
@@ -855,8 +1131,17 @@
     const b = t.closest('[data-act]');
     if (!b) return;
     switch (b.dataset.act) {
-      case 'pick-customer': C.selected = b.dataset.id; C.showForm = false; C.form = null; break;
+      case 'pick-customer': App.workCustomer = b.dataset.id; onWorkCustomerChanged(); renderAll(); return;
       case 'open-client-form': C.showForm = true; C.form = newClientForm(); break;
+      case 'edit-client': {
+        const cust = customers().find((c) => c.id === C.selected);
+        const cl = cust && cust.clients.find((x) => x.id === b.dataset.id);
+        if (!cl) return;
+        C.showForm = true; C.form = editClientForm(cl);
+        keepFocus(renderCustomers);
+        const card = $('#client-form-card'); if (card) { card.scrollIntoView({ block: 'start' }); const n = $('#cf-name'); if (n) n.focus(); }
+        return;
+      }
       case 'cancel-client': C.showForm = false; C.form = null; break;
       case 'add-lob': addLob(); return;
       case 'remove-lob': f.lobs = f.lobs.filter((l) => String(l.key) !== b.dataset.key);
@@ -904,30 +1189,134 @@
     followUp: false, fuMax: '', fuText: '', visibility: 'platform', status: 'published', errors: [],
   });
 
-  function questionMatches(q, search, theme) {
-    if (theme && (LK.sub[q.primary] || {}).theme !== theme) return false;
-    if (!search) return true;
-    const s = search.toLowerCase();
-    const sub = LK.sub[q.primary];
-    const hay = [q.text, sub ? sub.label : '', sub ? themeLabel(sub.theme) : '', ...(sub ? sub.synonyms : [])].join(' ').toLowerCase();
-    return hay.includes(s);
+  // Pre-fill the question form from an existing question.
+  function editQuestionForm(q) {
+    const f = newQuestionForm();
+    Object.assign(f, {
+      editId: q.id, owner: q.owner || '', text: q.text, type: q.type,
+      scale: q.type === 'rating' ? (q.scale || f.scale) : f.scale,
+      options: q.options.join('\n'), primary: q.primary,
+      followUp: Boolean(q.followUp), fuMax: q.followUp ? String(q.followUp.max) : '', fuText: q.followUp ? q.followUp.text : '',
+      visibility: q.owner ? 'private' : 'platform', status: q.status === 'draft' ? 'draft' : 'published',
+    });
+    ['survey_goal', 'respondent_role', ...APPLY.map((a) => a.facet)].forEach((facet) => { f[facet] = [...(q.tags[facet] || [])]; });
+    return f;
   }
+
+  // Saved surveys that use a question.
+  const surveysUsing = (qid) => readSurveys().filter((sv) => sv.questionRefs.includes(qid));
+
+  // ---------- question search ----------
+  // A search term is matched against:
+  //   1. the question text (keywords),
+  //   2. every taxonomy entry's label and search synonyms: themes, sub-themes, concerns (problems)
+  //      and facet values (industry, goal, role, service line, engagement model, type of work, stage).
+  // A matched taxonomy entry pulls in the questions mapped to it, so "QBR" finds Executive reviews questions.
+  const FACET_NAMES = {
+    industry: 'Industry', survey_goal: 'Goal', respondent_role: 'Role', service_line: 'Service line',
+    engagement_model: 'Engagement model', work_type: 'Type of work', lifecycle_stage: 'Lifecycle stage',
+  };
+  const norm = (str) => ` ${String(str).toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim()} `;
+  const STOP = new Set(['a', 'an', 'the', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'is', 'are', 'how', 'we', 'our', 'you', 'your', 'with', 'by', 'it']);
+  let SEARCH_INDEX = null;
+  function searchIndex() {
+    if (SEARCH_INDEX) return SEARCH_INDEX;
+    const entries = [];
+    const add = (kind, code, label, synonyms, extra = {}) => entries.push({
+      kind, code, label, ...extra,
+      terms: [{ t: norm(label), syn: false }, ...synonyms.map((x) => ({ t: norm(x), syn: true, raw: x }))].filter((x) => x.t.trim()),
+    });
+    LK.themes.forEach((t) => {
+      add('theme', t.code, t.label, t.synonyms);
+      t.subs.forEach((sb) => add('subtheme', sb.code, sb.label, sb.synonyms, { theme: t.code }));
+    });
+    LK.problems.forEach((p) => add('problem', p.code, p.label, p.synonyms, { links: p.links }));
+    Object.keys(FACET_NAMES).forEach((f) => (LK.facets[f] || []).forEach((v) => add('facet', v.code, v.label, v.synonyms, { facet: f })));
+    SEARCH_INDEX = entries;
+    return entries;
+  }
+
+  // Which taxonomy entries the search text refers to.
+  function interpretSearch(search) {
+    const qn = norm(search);
+    if (!qn.trim()) return [];
+    const out = [];
+    searchIndex().forEach((e) => {
+      let hit = null;
+      e.terms.forEach((term) => {
+        if (hit) return;
+        const whole = qn.includes(term.t) || (!STOP.has(qn.trim()) && term.t.includes(qn)); // term inside the query, or query is a whole-word part of the term
+        const prefix = qn.trim().length >= 3 && term.t.trimStart().startsWith(qn.trim()); // typing in progress
+        if (whole || prefix) hit = term;
+      });
+      if (hit) out.push({ ...e, via: hit.syn ? hit.raw : '' });
+    });
+    return out;
+  }
+
+  const kindLabel = (e) => (e.kind === 'theme' ? 'Theme' : e.kind === 'subtheme' ? 'Sub-theme' : e.kind === 'problem' ? 'Concern' : FACET_NAMES[e.facet]);
+
+  // Returns matching questions, best first, each with the reasons it matched.
+  function searchQuestions(questions, search, theme) {
+    const inTheme = (q) => !theme || (LK.sub[q.primary] || {}).theme === theme;
+    const qn = norm(search);
+    if (!qn.trim()) return questions.filter(inTheme).map((q) => ({ q, score: 0, reasons: [] }));
+    const concepts = interpretSearch(search);
+    const words = qn.trim().split(' ').filter((w) => w.length >= 2 && !STOP.has(w));
+    const results = [];
+    questions.filter(inTheme).forEach((q) => {
+      let score = 0; const reasons = [];
+      const text = norm(q.text);
+      if (text.includes(qn)) { score += 6; reasons.push('Question text'); }
+      else if (words.length && words.every((w) => text.includes(` ${w}`))) { score += 3; reasons.push('Question text'); }
+      const sub = LK.sub[q.primary];
+      concepts.forEach((c) => {
+        const why = `${kindLabel(c)}: ${c.label}${c.via ? ` (synonym “${c.via}”)` : ''}`;
+        if (c.kind === 'subtheme' && c.code === q.primary) { score += 5; reasons.push(why); }
+        else if (c.kind === 'theme' && sub && sub.theme === c.code) { score += 3; reasons.push(why); }
+        else if (c.kind === 'problem') {
+          const link = c.links.find((l) => l.sub === q.primary);
+          if (link) { score += link.weight; reasons.push(why); }
+        } else if (c.kind === 'facet' && (q.tags[c.facet] || []).includes(c.code)) { score += 2; reasons.push(why); }
+      });
+      if (score > 0) results.push({ q, score, reasons });
+    });
+    return results.sort((a, b) => b.score - a.score || a.q.id.localeCompare(b.q.id));
+  }
+
+  // "QBR → Sub-theme: Executive reviews, Concern: Poor executive visibility"
+  function searchExplain(search) {
+    const c = interpretSearch(search);
+    if (!c.length) return search.trim() ? '<p class="hint search-explain">No taxonomy match; searching the question text only.</p>' : '';
+    return `<div class="search-explain"><span class="hint">“${esc(search.trim())}” also means:</span> ${c.slice(0, 8).map((e) => `<span class="tag soft-tag">${esc(kindLabel(e))}: ${esc(e.label)}</span>`).join('')}${c.length > 8 ? `<span class="hint">+${c.length - 8} more</span>` : ''}</div>`;
+  }
+
+  const reasonLine = (r) => (r.reasons.length ? `<span class="match-why">Matched on ${esc([...new Set(r.reasons)].join(' · '))}</span>` : '');
+
+  const Q_STATUS_FILTERS = [
+    { code: 'active', label: 'Published and draft' }, { code: 'published', label: 'Published' },
+    { code: 'draft', label: 'Draft' }, { code: 'retired', label: 'Retired' }, { code: 'all', label: 'All' },
+  ];
+  const statusFilter = (q) => (Q.status === 'all' ? true : Q.status === 'active' ? q.status !== 'retired' : q.status === Q.status);
 
   function renderQuestions() {
     const el = $('#tab-questions');
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>Question library</h1><p>Platform questions plus ${esc((currentCustomer() || {}).name || 'this customer')}'s private ones. Saved to <code>questions.xml</code>.</p></div>
+        <div><h1>Question library</h1><p>Platform questions plus every customer's private ones. Private questions you add belong to <strong>${esc((currentCustomer() || {}).name || 'the customer you are working on')}</strong>. Saved to <code>questions.xml</code>.</p></div>
         ${Q.showForm ? '' : '<button type="button" class="btn primary" data-act="open-q-form">+ New question</button>'}
       </div>
       ${Q.showForm ? questionForm() : ''}
       <div class="card">
         <div class="grid" style="margin-bottom:14px">
           <div class="field"><label class="label" for="q-search">Search</label>
-            <input type="search" id="q-search" data-act="q-search" value="${esc(Q.search)}" placeholder="e.g. ticket turnaround, QBR, pricing"></div>
+            <input type="search" id="q-search" data-act="q-search" value="${esc(Q.search)}" placeholder="Keyword or synonym, e.g. QBR, ticket turnaround, insurance, T&amp;M"></div>
           <div class="field"><label class="label" for="q-theme">Theme</label>
             <select id="q-theme" data-act="q-theme">${optionList(LK.themes.map((t) => ({ code: t.code, label: t.label })), Q.theme, 'All themes')}</select></div>
+          <div class="field"><label class="label" for="q-status">Status</label>
+            <select id="q-status" data-act="q-status">${optionList(Q_STATUS_FILTERS, Q.status)}</select></div>
         </div>
+        <p style="margin:-6px 0 12px"><span class="hint">Searches question text plus the search synonyms of themes, sub-themes, concerns, industries, goals, roles, service lines, engagement models, types of work and lifecycle stages.</span></p>
         <div id="q-results"></div>
       </div>`;
     renderQuestionList();
@@ -936,22 +1325,93 @@
   function renderQuestionList() {
     const box = $('#q-results');
     if (!box) return;
-    const tenant = App.tenant;
     const custNames = {};
     customers().forEach((c) => { custNames[c.id] = c.name; });
-    const all = readQuestions().filter((q) => !q.owner || q.owner === tenant);
-    const list = all.filter((q) => questionMatches(q, Q.search, Q.theme));
-    box.innerHTML = `<p class="hint" style="margin-bottom:10px">${list.length} of ${all.length} questions${Q.search ? ' (search also matches sub-theme synonyms)' : ''}</p>
-      <div class="list">${list.map((q) => {
+    const all = readQuestions(); // admin only: every question
+    const results = searchQuestions(all.filter(statusFilter), Q.search, Q.theme);
+    const usage = {};
+    readSurveys().forEach((sv) => sv.questionRefs.forEach((id) => { usage[id] = (usage[id] || 0) + 1; }));
+    box.innerHTML = `${searchExplain(Q.search)}<p class="hint" style="margin-bottom:10px">${results.length} of ${all.length} questions</p>
+      <div class="list">${results.map((r) => {
+        const q = r.q;
         const tags = [];
         tags.push(`<span class="tag theme">${esc(q.framework === 'nps' ? 'NPS' : subLabel(q.primary))}</span>`);
         tags.push(`<span class="tag">${esc(typeLabel(q.type))}${q.scale && LK.scales[q.scale] && q.type === 'rating' ? ' · ' + esc(LK.scales[q.scale].name) : ''}</span>`);
         (q.tags.respondent_role || []).forEach((r) => tags.push(`<span class="tag">${esc(label('respondent_role', r))}</span>`));
         APPLY.forEach((a) => (q.tags[a.facet] || []).forEach((v) => tags.push(`<span class="tag">${esc(a.label)}: ${esc(short(a.facet, v))}</span>`)));
         if (q.owner) tags.push(`<span class="badge warn">Private to ${esc(custNames[q.owner] || q.owner)}</span>`);
-        if (q.status !== 'published') tags.push(`<span class="badge grey">${esc(q.status)}</span>`);
-        return `<div class="qcard"><div style="min-width:0"><p>${esc(q.text)}</p><div class="tags">${tags.join('')}</div></div></div>`;
+        if (q.status === 'retired') tags.push('<span class="badge retired">Retired</span>');
+        else if (q.status !== 'published') tags.push(`<span class="badge grey">${esc(q.status)}</span>`);
+        const used = usage[q.id] || 0;
+        return `<div class="qcard${q.status === 'retired' ? ' is-retired' : ''}" id="qcard-${esc(q.id)}">
+          <div style="min-width:0;flex:1"><p>${esc(q.text)}</p><div class="tags">${tags.join('')}</div>${reasonLine(r)}
+            <span class="match-why">${esc(q.id)} · ${used ? `used in ${used} saved survey${used === 1 ? '' : 's'}` : 'not used in any survey'}${q.updatedAt ? ` · updated ${esc(q.updatedAt)}` : ''}</span>
+            ${questionConfirm(q, used)}</div>
+          <div class="q-actions">
+            <button type="button" class="btn small" data-act="edit-q" data-id="${esc(q.id)}">Edit</button>
+            ${q.status === 'retired'
+              ? `<button type="button" class="btn small" data-act="reactivate-q" data-id="${esc(q.id)}">Reactivate</button>`
+              : `<button type="button" class="btn small" data-act="ask-q" data-action="retire" data-id="${esc(q.id)}">Retire</button>`}
+            <button type="button" class="btn small danger" data-act="ask-q" data-action="delete" data-id="${esc(q.id)}">Delete</button>
+          </div></div>`;
       }).join('') || '<p class="hint">No questions match.</p>'}</div>`;
+  }
+
+  // Inline confirmation for Retire and Delete.
+  function questionConfirm(q, used) {
+    if (!Q.confirm || Q.confirm.id !== q.id) return '';
+    if (Q.confirm.action === 'retire') {
+      return `<div class="note warn confirm-box" role="alert"><strong>Retire this question?</strong>
+        It stops appearing in recommendations and search for new surveys.${used ? ` The ${used} saved survey${used === 1 ? '' : 's'} using it keep it.` : ''} You can reactivate it later.
+        <div class="actions"><button type="button" class="btn small" data-act="confirm-cancel">Keep it</button>
+        <button type="button" class="btn small primary" data-act="confirm-retire" data-id="${esc(q.id)}">Retire question</button></div></div>`;
+    }
+    if (used) {
+      return `<div class="note warn confirm-box" role="alert"><strong>This question can't be deleted.</strong>
+        It is used in ${used} saved survey${used === 1 ? '' : 's'}, and deleting it would leave a gap in ${used === 1 ? 'that survey' : 'them'}. Retire it instead, or remove it from those surveys first.
+        <div class="actions"><button type="button" class="btn small" data-act="confirm-cancel">Close</button>
+        ${q.status === 'retired' ? '' : `<button type="button" class="btn small primary" data-act="confirm-retire" data-id="${esc(q.id)}">Retire instead</button>`}</div></div>`;
+    }
+    return `<div class="note warn confirm-box" role="alert"><strong>Delete this question permanently?</strong>
+      It is removed from <code>questions.xml</code>. This can't be undone.
+      <div class="actions"><button type="button" class="btn small" data-act="confirm-cancel">Keep it</button>
+      <button type="button" class="btn small danger" data-act="confirm-delete" data-id="${esc(q.id)}">Delete question</button></div></div>`;
+  }
+
+  async function setQuestionStatus(id, status) {
+    try {
+      await Store.mutate('questions', (doc) => {
+        const q = kids(doc.documentElement, 'question').find((x) => attr(x, 'id') === id);
+        if (!q) throw new Error('This question no longer exists.');
+        q.setAttribute('status', status);
+        q.setAttribute('updatedAt', new Date().toISOString().slice(0, 10));
+        if (status === 'retired') q.setAttribute('retiredAt', new Date().toISOString().slice(0, 10)); else q.removeAttribute('retiredAt');
+      });
+      Q.confirm = null;
+      toast(status === 'retired' ? `${id} retired. It is hidden from new surveys.` : `${id} is published again.`);
+      refreshAfterQuestionChange();
+    } catch (e) { toast(`Could not update the question: ${e.message}`, true); }
+  }
+
+  async function deleteQuestion(id) {
+    if (surveysUsing(id).length) { toast('This question is used in a saved survey. Retire it instead.', true); return; }
+    try {
+      await Store.mutate('questions', (doc) => {
+        const q = kids(doc.documentElement, 'question').find((x) => attr(x, 'id') === id);
+        if (!q) throw new Error('This question no longer exists.');
+        doc.documentElement.removeChild(q);
+      });
+      Q.confirm = null;
+      if (Q.form && Q.form.editId === id) { Q.showForm = false; Q.form = null; }
+      toast(`${id} deleted from questions.xml.`);
+      refreshAfterQuestionChange();
+    } catch (e) { toast(`Could not delete the question: ${e.message}`, true); }
+  }
+
+  function refreshAfterQuestionChange() {
+    keepFocus(renderQuestions);
+    if (S.clientId) renderSurvey();
+    renderSurveys();
   }
 
   function questionForm() {
@@ -963,17 +1423,18 @@
     const thresholds = canFollow ? scale.points.filter((p) => p.value < scale.favourable) : [];
     const subOptions = LK.themes.map((t) => `<optgroup label="${esc(t.label)}">${t.subs.map((s) => `<option value="${s.code}"${f.primary === s.code ? ' selected' : ''}>${esc(s.label)}</option>`).join('')}</optgroup>`).join('');
     const cust = currentCustomer();
-    return `<div class="card" id="q-form-card">
-      <h2>New question</h2>
+    const ownerName = f.owner ? ((customers().find((c) => c.id === f.owner) || {}).name || f.owner) : (cust ? cust.name : 'this customer');
+    const usedIn = f.editId ? surveysUsing(f.editId).length : 0;
+    return `<div class="card${f.editId ? ' editing' : ''}" id="q-form-card">
+      <h2>${f.editId ? `Edit question ${esc(f.editId)}` : 'New question'}</h2>
+      ${f.editId && usedIn ? `<div class="note" style="margin-bottom:14px">Used in <strong>${usedIn} saved survey${usedIn === 1 ? '' : 's'}</strong>. Changes to the wording or answers will show in ${usedIn === 1 ? 'that survey' : 'those surveys'} too. For a different question, add a new one and retire this one.</div>` : ''}
       ${f.errors.length ? `<div class="note warn" role="alert" style="margin-bottom:14px"><strong>Fix these to save:</strong><br>${f.errors.map(esc).join('<br>')}</div>` : ''}
       <div class="cols" style="gap:18px">
         <div class="col-main" style="gap:0">
           <div class="field">
             <label class="label" for="qf-text">Question text <span class="req">*</span></label>
             <textarea id="qf-text" data-qf="text" rows="3" maxlength="200">${esc(f.text)}</textarea>
-            <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center">
-              <div class="chips"><span class="hint">Insert</span>
-                ${['[PROVIDER]', '[CLIENT]', '[LOB]'].map((tk) => `<button type="button" class="btn small" data-act="insert-token" data-token="${tk}">${tk}</button>`).join('')}</div>
+            <div style="display:flex;justify-content:flex-end">
               <span class="hint" id="qf-count">${f.text.length} / 200</span>
             </div>
           </div>
@@ -1001,9 +1462,9 @@
             <select id="qf-primary" data-qf="primary"><option value="">Choose…</option>${subOptions}</select>
             <span class="hint">Scores roll up to this sub-theme and its theme.</span>
           </div>
-          <div class="field"><span class="label">Fits these survey goals <span class="req">*</span></span>
+          <div class="field"><span class="label">Fits these survey goals</span><span class="hint">Leave empty to fit every goal.</span>
             <div class="chips">${LK.facets.survey_goal.map((g) => chip(`qf-goal-${g.code}`, 'qf-multi', g.code, f.survey_goal.includes(g.code), g.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="survey_goal"')).join('')}</div></div>
-          <div class="field"><span class="label">Suitable respondents <span class="req">*</span></span>
+          <div class="field"><span class="label">Suitable respondents</span><span class="hint">Leave empty for every role.</span>
             <div class="chips">${LK.facets.respondent_role.map((r) => chip(`qf-role-${r.code}`, 'qf-multi', r.code, f.respondent_role.includes(r.code), r.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="respondent_role"')).join('')}</div></div>
           <div class="field"><span class="label">Where does this question apply?</span>
             <span class="hint">Leave a group empty to apply everywhere.</span>
@@ -1011,7 +1472,7 @@
           </div>
           <div class="grid">
             <div class="field"><label class="label" for="qf-visibility">Visibility</label>
-              <select id="qf-visibility" data-qf="visibility">${optionList([{ code: 'platform', label: 'Platform library (all customers)' }, { code: 'private', label: `Private to ${cust ? cust.name : 'this customer'}` }], f.visibility)}</select></div>
+              <select id="qf-visibility" data-qf="visibility">${optionList([{ code: 'platform', label: 'Platform library (all customers)' }, { code: 'private', label: `Private to ${ownerName}` }], f.visibility)}</select></div>
             <div class="field"><label class="label" for="qf-status">Status</label>
               <select id="qf-status" data-qf="status">${optionList([{ code: 'published', label: 'Published (usable in surveys)' }, { code: 'draft', label: 'Draft' }], f.status)}</select></div>
           </div>
@@ -1022,7 +1483,7 @@
       </div>
       <div class="actions">
         <button type="button" class="btn" data-act="cancel-q">Cancel</button>
-        <button type="button" class="btn primary" id="qf-save" data-act="save-q">Save question</button>
+        <button type="button" class="btn primary" id="qf-save" data-act="save-q">${f.editId ? 'Save changes' : 'Save question'}</button>
       </div>
     </div>`;
   }
@@ -1055,8 +1516,6 @@
     if (text.length < 5) errs.push('Write the question (at least 5 characters).');
     if (/\[(?!PROVIDER\]|CLIENT\]|LOB\])[A-Z]+\]/.test(text)) errs.push('Only [PROVIDER], [CLIENT] and [LOB] tokens are supported.');
     if (!f.primary) errs.push('Choose a primary sub-theme.');
-    if (!f.survey_goal.length) errs.push('Pick at least one survey goal.');
-    if (!f.respondent_role.length) errs.push('Pick at least one respondent role.');
     if (f.type === 'multiple_choice' || f.type === 'ranking') {
       const n = f.options.split('\n').map((s) => s.trim()).filter(Boolean).length;
       if (n < 2 || n > 10) errs.push('Give between 2 and 10 answer options.');
@@ -1065,7 +1524,7 @@
       if (f.fuMax === '') errs.push('Choose the follow-up threshold.');
       if (!f.fuText.trim()) errs.push('Write the follow-up question.');
     }
-    if (f.type === 'nps' && f.status === 'published' && readQuestions().some((q) => q.framework === 'nps' && q.status === 'published' && (!q.owner || q.owner === App.tenant))) {
+    if (f.type === 'nps' && f.status === 'published' && readQuestions().some((q) => q.id !== f.editId && q.framework === 'nps' && q.status === 'published' && (!q.owner || q.owner === (currentCustomer() || {}).id))) {
       errs.push('A published NPS question already exists. NPS wording is standard, so reuse that one.');
     }
     return errs;
@@ -1079,27 +1538,32 @@
     try {
       await Store.mutate('questions', (doc) => {
         const root = doc.documentElement;
+        const existing = f.editId ? kids(root, 'question').find((x) => attr(x, 'id') === f.editId) : null;
+        if (f.editId && !existing) throw new Error('This question was deleted by someone else.');
         const nums = kids(root, 'question').map((q) => Number((attr(q, 'id').match(/(\d+)$/) || [0, 0])[1]));
-        const id = `q-${String(Math.max(0, ...nums) + 1).padStart(3, '0')}`;
+        const id = f.editId || `q-${String(Math.max(0, ...nums) + 1).padStart(3, '0')}`;
         const q = doc.createElement('question');
         const set = (k, v) => { if (v !== '' && v != null) q.setAttribute(k, v); };
         set('id', id); set('status', f.status); set('type', f.type);
         if (f.type === 'rating') set('scale', f.scale);
         if (f.type === 'nps') { set('scale', 'likelihood_11'); set('framework', 'nps'); }
         set('primary', f.primary);
-        q.setAttribute('owner', f.visibility === 'private' ? App.tenant : '');
-        set('createdAt', new Date().toISOString().slice(0, 10));
+        q.setAttribute('owner', f.visibility === 'private' ? (f.owner || (currentCustomer() || {}).id || '') : '');
+        if (existing && attr(existing, 'benchmark')) set('benchmark', attr(existing, 'benchmark'));
+        set('createdAt', existing ? attr(existing, 'createdAt') : new Date().toISOString().slice(0, 10));
+        if (existing) set('updatedAt', new Date().toISOString().slice(0, 10));
         const add = (tag, attrs, text) => { const n = doc.createElement(tag); Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v)); if (text != null) n.textContent = text; q.appendChild(n); };
         add('text', {}, f.text.trim());
         if (f.type === 'multiple_choice' || f.type === 'ranking') f.options.split('\n').map((s) => s.trim()).filter(Boolean).forEach((o) => add('option', {}, o));
         ['survey_goal', 'respondent_role', ...APPLY.map((a) => a.facet)].forEach((facet) => { if (f[facet].length) add('tag', { facet, codes: f[facet].join(' ') }); });
         if (f.followUp && (f.type === 'rating' || f.type === 'nps')) add('followUp', { max: f.fuMax }, f.fuText.trim());
-        root.appendChild(q);
+        if (existing) root.replaceChild(q, existing); else root.appendChild(q);
       });
+      const edited = f.editId;
       Q.showForm = false; Q.form = null;
-      toast('Question added to questions.xml.');
-      renderQuestions();
-      if (S.clientId) renderSurvey();
+      toast(edited ? `${edited} updated in questions.xml.` : 'Question added to questions.xml.');
+      refreshAfterQuestionChange();
+      if (edited) { const card = $(`#qcard-${edited}`); if (card) card.scrollIntoView({ block: 'center' }); }
     } catch (e) {
       toast(`Could not save the question: ${e.message}`, true);
       if (btn) btn.disabled = false;
@@ -1111,6 +1575,7 @@
     const f = Q.form;
     if (ev.type === 'input' && t.dataset.act === 'q-search') { Q.search = t.value; renderQuestionList(); return; }
     if (ev.type === 'change' && t.dataset.act === 'q-theme') { Q.theme = t.value; renderQuestionList(); return; }
+    if (ev.type === 'change' && t.dataset.act === 'q-status') { Q.status = t.value; Q.confirm = null; renderQuestionList(); return; }
     if (f && (ev.type === 'input' || ev.type === 'change') && t.dataset.qf) {
       f[t.dataset.qf] = t.value;
       if (t.dataset.qf === 'text') { $('#qf-count').textContent = `${t.value.length} / 200`; $('#qf-preview').innerHTML = questionPreview(); return; }
@@ -1132,19 +1597,21 @@
     if (!b) return;
     switch (b.dataset.act) {
       case 'open-q-form': Q.showForm = true; Q.form = newQuestionForm(); renderQuestions(); $('#qf-text').focus(); return;
-      case 'cancel-q': Q.showForm = false; Q.form = null; renderQuestions(); return;
-      case 'save-q': saveQuestion(); return;
-      case 'insert-token': {
-        const ta = $('#qf-text');
-        const tok = b.dataset.token;
-        const start = ta.selectionStart ?? ta.value.length; const end = ta.selectionEnd ?? ta.value.length;
-        ta.value = (ta.value.slice(0, start) + tok + ta.value.slice(end)).slice(0, 200);
-        f.text = ta.value;
-        ta.focus(); ta.setSelectionRange(start + tok.length, start + tok.length);
-        $('#qf-count').textContent = `${f.text.length} / 200`;
-        $('#qf-preview').innerHTML = questionPreview();
+      case 'edit-q': {
+        const q = readQuestions().find((x) => x.id === b.dataset.id);
+        if (!q) return;
+        Q.showForm = true; Q.form = editQuestionForm(q); Q.confirm = null;
+        renderQuestions();
+        $('#q-form-card').scrollIntoView({ block: 'start' }); $('#qf-text').focus({ preventScroll: true });
         return;
       }
+      case 'ask-q': Q.confirm = { id: b.dataset.id, action: b.dataset.action }; renderQuestionList(); { const btn = $(`#qcard-${b.dataset.id} .confirm-box button`); if (btn) btn.focus(); } return;
+      case 'confirm-cancel': Q.confirm = null; renderQuestionList(); return;
+      case 'confirm-retire': setQuestionStatus(b.dataset.id, 'retired'); return;
+      case 'reactivate-q': setQuestionStatus(b.dataset.id, 'published'); return;
+      case 'confirm-delete': deleteQuestion(b.dataset.id); return;
+      case 'cancel-q': Q.showForm = false; Q.form = null; renderQuestions(); return;
+      case 'save-q': saveQuestion(); return;
       default:
     }
   }
@@ -1209,8 +1676,8 @@
         try {
           await Store.reset();
           D.confirmReset = false;
-          App.tenant = (customers()[0] || {}).id || '';
-          const c = currentCustomer(); S = newSurveyState(c && c.clients[0]);
+          App.workCustomer = (customers()[0] || {}).id || '';
+          onWorkCustomerChanged();
           renderAll(); toast('Demo data reset to the original sample XML.');
         } catch (e) { toast(`Could not reset: ${e.message}`, true); }
         return;
@@ -1224,8 +1691,15 @@
   function renderTenant() {
     const sel = $('#tenant-select');
     const list = customers();
-    if (!list.find((c) => c.id === App.tenant)) App.tenant = list[0] ? list[0].id : '';
-    sel.innerHTML = list.map((c) => `<option value="${esc(c.id)}"${c.id === App.tenant ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+    if (!isAdmin() && !list.find((c) => c.id === App.tenant)) App.tenant = list[0] ? list[0].id : ADMIN;
+    if (!list.find((c) => c.id === App.workCustomer)) App.workCustomer = list[0] ? list[0].id : '';
+    sel.innerHTML = `<option value="${ADMIN}"${isAdmin() ? ' selected' : ''}>Admin (A4U)</option>`
+      + `<optgroup label="Customers">${list.map((c) => `<option value="${esc(c.id)}"${c.id === App.tenant ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup>`;
+    $('#work-customer-wrap').hidden = !isAdmin();
+    $('#work-customer').innerHTML = list.map((c) => `<option value="${esc(c.id)}"${c.id === App.workCustomer ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
+    const allowed = allowedTabs();
+    document.querySelectorAll('.tabs [role="tab"]').forEach((b) => { b.hidden = !allowed.includes(b.dataset.tab); });
+    $('#tab-btn-customers').textContent = isAdmin() ? 'Customers & clients' : 'Clients';
     const badge = $('#storage-badge');
     badge.textContent = Store.mode === 'shared' ? 'Shared XML storage' : 'Saved in this browser';
     badge.className = 'storage-badge' + (Store.mode === 'shared' ? '' : ' local');
@@ -1243,9 +1717,20 @@
     const c = currentCustomer();
     if (S.clientId && !(c && c.clients.some((x) => x.id === S.clientId))) S = newSurveyState(c && c.clients[0]);
     renderSurvey();
+    renderSurveys();
     renderCustomers();
-    renderQuestions();
-    renderData();
+    if (isAdmin()) { renderQuestions(); renderData(); }
+    if (!allowedTabs().includes(App.tab)) showTab('survey');
+  }
+
+  // Signed-in user or Admin's working customer changed: start the screens fresh for that customer.
+  function onWorkCustomerChanged() {
+    const c = currentCustomer();
+    S = newSurveyState(c && c.clients[0]);
+    Object.assign(V, { selected: '', client: '', draft: null, search: '' });
+    Q.showForm = false; Q.form = null;
+    C.showForm = false; C.form = null;
+    if (c) C.selected = c.id;
   }
 
   function showTab(name) {
@@ -1255,7 +1740,7 @@
       b.setAttribute('aria-selected', String(on));
       b.tabIndex = on ? 0 : -1;
     });
-    ['survey', 'customers', 'questions', 'data'].forEach((n) => { $(`#tab-${n}`).hidden = n !== name; });
+    ['survey', 'surveys', 'customers', 'questions', 'data'].forEach((n) => { $(`#tab-${n}`).hidden = n !== name; });
     if (name === 'data') renderData();
   }
 
@@ -1264,7 +1749,8 @@
       await Store.init();
       LK = buildLookups(Store.lookups());
       const first = customers()[0];
-      App.tenant = first ? first.id : '';
+      App.tenant = ADMIN;
+      App.workCustomer = first ? first.id : '';
       S = newSurveyState(first && first.clients[0]);
       $('#loading').hidden = true;
       renderAll();
@@ -1276,10 +1762,13 @@
 
     $('#tenant-select').addEventListener('change', (e) => {
       App.tenant = e.target.value;
-      const c = currentCustomer();
-      S = newSurveyState(c && c.clients[0]);
-      Q.showForm = false; Q.form = null;
-      renderSurvey(); renderQuestions();
+      onWorkCustomerChanged();
+      renderAll();
+    });
+    $('#work-customer').addEventListener('change', (e) => {
+      App.workCustomer = e.target.value;
+      onWorkCustomerChanged();
+      renderAll();
     });
     document.querySelector('.tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
     document.querySelector('.tabs').addEventListener('keydown', (e) => {
@@ -1295,6 +1784,8 @@
     ['change', 'click', 'input', 'submit', 'keydown'].forEach((t) => cu.addEventListener(t, onCustomersEvent));
     const qu = $('#tab-questions');
     ['change', 'click', 'input'].forEach((t) => qu.addEventListener(t, onQuestionsEvent));
+    const vs = $('#tab-surveys');
+    ['change', 'click', 'input'].forEach((t) => vs.addEventListener(t, onSurveysEvent));
     const da = $('#tab-data');
     ['change', 'click'].forEach((t) => da.addEventListener(t, onDataEvent));
   }
