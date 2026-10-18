@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Reference lists (taxonomy). Read-only in the demo; edited by A4U admins in the full product. -->
+<lookups>
+  <facet code="industry" name="Industry">
+    <value code="insurance">Insurance</value>
+    <value code="retail">Retail</value>
+    <value code="manufacturing">Manufacturing</value>
+  </facet>
+
+  <facet code="survey_goal" name="Survey goal">
+    <value code="relationship_health" includeNps="true" description="Periodic, all-round pulse">Relationship health check</value>
+    <value code="pre_renewal" includeNps="true" description="Spot risks before the contract is up">Pre-renewal check</value>
+    <value code="post_project" includeNps="false" description="Close-out feedback on a delivery">Post-project review</value>
+    <value code="onboarding" includeNps="false" description="How the transition went">Onboarding feedback</value>
+    <value code="post_escalation" includeNps="false" description="After a major incident">Post-escalation follow-up</value>
+    <value code="expansion_discovery" includeNps="false" description="Find new areas to help">Account expansion discovery</value>
+  </facet>
+
+  <facet code="respondent_role" name="Respondent role">
+    <value code="executive_sponsor" maxQuestions="10">Executive sponsor</value>
+    <value code="it_head" maxQuestions="20">IT head</value>
+    <value code="program_manager" maxQuestions="25">Program manager</value>
+    <value code="procurement" maxQuestions="12">Procurement</value>
+    <value code="business_user" maxQuestions="15">Business user</value>
+    <value code="end_user" maxQuestions="10">End user</value>
+  </facet>
+
+  <facet code="service_line" name="Service line">
+    <value code="app_development">Application development</value>
+    <value code="app_maintenance">Application maintenance</value>
+    <value code="infra_managed">Infrastructure managed services</value>
+    <value code="cloud_ops">Cloud operations</value>
+    <value code="service_desk">Service desk</value>
+    <value code="cybersecurity">Cybersecurity</value>
+    <value code="data_analytics">Data &amp; analytics</value>
+    <value code="qa_testing">QA / testing</value>
+    <value code="consulting">Consulting</value>
+  </facet>
+
+  <facet code="engagement_model" name="Engagement model">
+    <value code="time_materials" short="T&amp;M" hasSlas="false" defaultWorkType="change">Time &amp; materials</value>
+    <value code="fixed_price" short="Fixed price" hasSlas="false" defaultWorkType="project">Fixed price</value>
+    <value code="managed_services" short="Managed services" hasSlas="true" defaultWorkType="run">Managed services (SLA-based)</value>
+    <value code="staff_augmentation" short="Staff aug" hasSlas="false" defaultWorkType="change">Staff augmentation</value>
+    <value code="outcome_based" short="Outcome-based" hasSlas="false" defaultWorkType="project">Outcome-based</value>
+  </facet>
+
+  <facet code="work_type" name="Type of work">
+    <value code="run" short="Run">Run (support &amp; maintenance)</value>
+    <value code="change" short="Change">Change (enhancements)</value>
+    <value code="project" short="Project">Project (fixed-scope delivery)</value>
+  </facet>
+
+  <facet code="lifecycle_stage" name="Lifecycle stage">
+    <value code="pre_sales" priority="1">Pre-sales / pilot</value>
+    <value code="transition" priority="3" durationDays="90">Transition</value>
+    <value code="steady_state" priority="2">Steady state</value>
+    <value code="pre_renewal" priority="5" startsDaysBeforeEnd="180">Pre-renewal</value>
+    <value code="exit" priority="4">Exit</value>
+  </facet>
+
+  <tiers>
+    <tier code="strategic" length="in_depth" roles="executive_sponsor it_head">Strategic</tier>
+    <tier code="key" length="standard" roles="it_head program_manager">Key</tier>
+    <tier code="standard" length="pulse" roles="program_manager">Standard</tier>
+  </tiers>
+
+  <lengths>
+    <length code="pulse" minutes="3" questions="6">Pulse</length>
+    <length code="standard" minutes="8" questions="14">Standard</length>
+    <length code="in_depth" minutes="15" questions="22">In-depth</length>
+  </lengths>
+
+  <themes>
+    <theme code="delivery_quality" label="Delivery quality">
+      <subtheme code="accuracy_of_deliverables" synonyms="first time right|requirements">Accuracy of deliverables</subtheme>
+      <subtheme code="defects_rework" synonyms="bugs|quality issues">Defects &amp; rework</subtheme>
+      <subtheme code="consistency" synonyms="reliability">Consistency</subtheme>
+      <subtheme code="adherence_to_standards" synonyms="process|standards">Adherence to standards</subtheme>
+    </theme>
+    <theme code="communication" label="Communication">
+      <subtheme code="responsiveness" synonyms="ticket turnaround|response time">Responsiveness</subtheme>
+      <subtheme code="proactive_updates" synonyms="status updates|risk alerts|early warning|no surprises">Proactive updates</subtheme>
+      <subtheme code="escalation_handling" synonyms="incidents|escalations">Escalation handling</subtheme>
+      <subtheme code="meeting_effectiveness" synonyms="status meetings|QBR quality">Meeting effectiveness</subtheme>
+    </theme>
+    <theme code="collaboration" label="Collaboration">
+      <subtheme code="partnership" synonyms="relationship">Partnership</subtheme>
+      <subtheme code="joint_problem_solving" synonyms="working together">Joint problem-solving</subtheme>
+      <subtheme code="knowledge_sharing" synonyms="KT|knowledge transfer|documentation">Knowledge sharing</subtheme>
+    </theme>
+    <theme code="value_addition" label="Value addition">
+      <subtheme code="proactive_improvement" synonyms="new ideas|innovation">Proactive improvement ideas</subtheme>
+      <subtheme code="automation_efficiency" synonyms="automation|tooling">Automation &amp; efficiency</subtheme>
+      <subtheme code="cost_savings" synonyms="savings|cost reduction">Cost savings delivered</subtheme>
+      <subtheme code="technology_adoption" synonyms="modernisation|modernization">Technology adoption</subtheme>
+    </theme>
+    <theme code="commercials" label="Commercials">
+      <subtheme code="value_for_money" synonyms="pricing|cost">Value for money</subtheme>
+      <subtheme code="billing_accuracy" synonyms="invoices|billing">Billing accuracy</subtheme>
+      <subtheme code="renewal_intent" synonyms="renewal|churn">Renewal intent</subtheme>
+    </theme>
+    <theme code="governance" label="Governance">
+      <subtheme code="reporting_cadence" synonyms="reports|status reports">Reporting cadence</subtheme>
+      <subtheme code="executive_reviews" synonyms="QBR|business review">Executive reviews</subtheme>
+      <subtheme code="risk_management" synonyms="risks|RAID">Risk management</subtheme>
+      <subtheme code="sla_management" synonyms="SLA|service levels">SLA management</subtheme>
+    </theme>
+    <theme code="people" label="People">
+      <subtheme code="expertise" synonyms="skills|knowledge">Expertise</subtheme>
+      <subtheme code="attitude_ownership" synonyms="ownership|attitude">Attitude &amp; ownership</subtheme>
+      <subtheme code="team_stability" synonyms="attrition|turnover">Team stability</subtheme>
+      <subtheme code="onboarding_new_staff" synonyms="ramp-up">Onboarding of new staff</subtheme>
+    </theme>
+    <theme code="security_compliance" label="Security &amp; compliance">
+      <subtheme code="data_protection" synonyms="data security|privacy">Data protection</subtheme>
+      <subtheme code="access_control" synonyms="access|permissions">Access control</subtheme>
+      <subtheme code="regulatory_compliance" synonyms="regulation|compliance">Regulatory compliance</subtheme>
+      <subtheme code="incident_handling" synonyms="security incidents">Incident handling</subtheme>
+    </theme>
+    <theme code="business_outcomes" label="Business outcomes">
+      <subtheme code="impact_on_goals" synonyms="business impact|outcomes">Impact on business goals</subtheme>
+      <subtheme code="time_to_market" synonyms="speed|delivery speed">Time to market</subtheme>
+      <subtheme code="user_adoption" synonyms="usage|adoption">User adoption</subtheme>
+      <subtheme code="operational_stability" synonyms="uptime|availability|stability">Operational stability</subtheme>
+    </theme>
+  </themes>
+
+  <problems>
+    <problem code="churn_risk" label="Churn risk">
+      <link subtheme="value_for_money" weight="3"/><link subtheme="renewal_intent" weight="3"/>
+      <link subtheme="proactive_improvement" weight="2"/><link subtheme="consistency" weight="2"/>
+      <link subtheme="impact_on_goals" weight="2"/><link subtheme="partnership" weight="1"/>
+    </problem>
+    <problem code="pricing_concerns" label="Pricing concerns">
+      <link subtheme="value_for_money" weight="3"/><link subtheme="cost_savings" weight="3"/><link subtheme="billing_accuracy" weight="2"/>
+    </problem>
+    <problem code="missed_deadlines" label="Missed deadlines">
+      <link subtheme="accuracy_of_deliverables" weight="3"/><link subtheme="proactive_updates" weight="2"/><link subtheme="risk_management" weight="1"/>
+    </problem>
+    <problem code="communication_gaps" label="Communication gaps">
+      <link subtheme="proactive_updates" weight="3"/><link subtheme="responsiveness" weight="3"/>
+      <link subtheme="reporting_cadence" weight="2"/><link subtheme="meeting_effectiveness" weight="2"/>
+    </problem>
+    <problem code="team_turnover" label="Team turnover">
+      <link subtheme="team_stability" weight="3"/><link subtheme="onboarding_new_staff" weight="2"/><link subtheme="knowledge_sharing" weight="1"/>
+    </problem>
+    <problem code="lack_of_innovation" label="Lack of innovation">
+      <link subtheme="proactive_improvement" weight="3"/><link subtheme="technology_adoption" weight="3"/><link subtheme="automation_efficiency" weight="2"/>
+    </problem>
+    <problem code="quality_issues" label="Quality issues">
+      <link subtheme="defects_rework" weight="3"/><link subtheme="adherence_to_standards" weight="2"/><link subtheme="consistency" weight="2"/>
+    </problem>
+    <problem code="slow_resolution" label="Slow issue resolution">
+      <link subtheme="responsiveness" weight="3"/><link subtheme="escalation_handling" weight="3"/><link subtheme="sla_management" weight="2"/>
+    </problem>
+    <problem code="poor_exec_visibility" label="Poor executive visibility">
+      <link subtheme="executive_reviews" weight="3"/><link subtheme="reporting_cadence" weight="2"/><link subtheme="impact_on_goals" weight="2"/>
+    </problem>
+    <problem code="security_concerns" label="Security concerns">
+      <link subtheme="data_protection" weight="3"/><link subtheme="access_control" weight="2"/>
+      <link subtheme="regulatory_compliance" weight="2"/><link subtheme="incident_handling" weight="2"/>
+    </problem>
+    <problem code="scope_disputes" label="Scope disputes">
+      <link subtheme="joint_problem_solving" weight="2"/><link subtheme="partnership" weight="2"/><link subtheme="billing_accuracy" weight="2"/>
+    </problem>
+    <problem code="low_adoption" label="Low adoption of deliverables">
+      <link subtheme="user_adoption" weight="3"/><link subtheme="impact_on_goals" weight="2"/><link subtheme="knowledge_sharing" weight="1"/>
+    </problem>
+  </problems>
+
+  <!-- Suggestions used to pre-fill the survey context screen -->
+  <links>
+    <link type="stage_suggests_goal" from="pre_sales" to="relationship_health"/>
+    <link type="stage_suggests_goal" from="transition" to="onboarding"/>
+    <link type="stage_suggests_goal" from="steady_state" to="relationship_health"/>
+    <link type="stage_suggests_goal" from="pre_renewal" to="pre_renewal"/>
+    <link type="stage_suggests_goal" from="exit" to="post_project"/>
+
+    <link type="goal_suggests_theme" from="relationship_health" to="delivery_quality communication collaboration value_addition"/>
+    <link type="goal_suggests_theme" from="pre_renewal" to="commercials value_addition delivery_quality communication"/>
+    <link type="goal_suggests_theme" from="post_project" to="delivery_quality governance business_outcomes"/>
+    <link type="goal_suggests_theme" from="onboarding" to="people collaboration communication"/>
+    <link type="goal_suggests_theme" from="post_escalation" to="communication delivery_quality governance"/>
+    <link type="goal_suggests_theme" from="expansion_discovery" to="value_addition business_outcomes collaboration"/>
+
+    <link type="goal_suggests_problem" from="relationship_health" to="quality_issues missed_deadlines communication_gaps"/>
+    <link type="goal_suggests_problem" from="pre_renewal" to="churn_risk pricing_concerns lack_of_innovation"/>
+    <link type="goal_suggests_problem" from="post_project" to="missed_deadlines quality_issues scope_disputes"/>
+    <link type="goal_suggests_problem" from="onboarding" to="team_turnover communication_gaps"/>
+    <link type="goal_suggests_problem" from="post_escalation" to="slow_resolution communication_gaps"/>
+    <link type="goal_suggests_problem" from="expansion_discovery" to="lack_of_innovation low_adoption"/>
+
+    <link type="goal_suggests_role" from="post_project" to="program_manager"/>
+    <link type="goal_suggests_role" from="onboarding" to="program_manager"/>
+    <link type="goal_suggests_role" from="pre_renewal" to="executive_sponsor procurement"/>
+
+    <link type="model_typical_service_line" from="managed_services" to="app_maintenance infra_managed service_desk cloud_ops"/>
+    <link type="model_typical_service_line" from="time_materials" to="app_development qa_testing data_analytics"/>
+    <link type="model_typical_service_line" from="fixed_price" to="app_development qa_testing consulting"/>
+  </links>
+
+  <scales>
+    <scale code="agree_5" favourable="4" name="5-point agreement">
+      <point value="1">Strongly disagree</point><point value="2">Disagree</point><point value="3">Neither agree nor disagree</point>
+      <point value="4">Agree</point><point value="5">Strongly agree</point>
+    </scale>
+    <scale code="quality_5" favourable="4" name="5-point quality">
+      <point value="1">Very poorly</point><point value="2">Poorly</point><point value="3">Neutral</point>
+      <point value="4">Well</point><point value="5">Very well</point>
+    </scale>
+    <scale code="satisfaction_5" favourable="4" name="5-point satisfaction">
+      <point value="1">Very dissatisfied</point><point value="2">Dissatisfied</point><point value="3">Neutral</point>
+      <point value="4">Satisfied</point><point value="5">Very satisfied</point>
+    </scale>
+    <scale code="frequency_5" favourable="4" name="Frequency">
+      <point value="1">Never</point><point value="2">Rarely</point><point value="3">Sometimes</point>
+      <point value="4">Often</point><point value="5">Always</point>
+    </scale>
+    <scale code="agree_7" favourable="5" name="7-point agreement">
+      <point value="1">Strongly disagree</point><point value="2">Disagree</point><point value="3">Somewhat disagree</point>
+      <point value="4">Neither agree nor disagree</point><point value="5">Somewhat agree</point><point value="6">Agree</point>
+      <point value="7">Strongly agree</point>
+    </scale>
+    <scale code="likelihood_11" favourable="9" name="0–10 likelihood" locked="true">
+      <point value="0">Not at all likely</point><point value="1">1</point><point value="2">2</point><point value="3">3</point>
+      <point value="4">4</point><point value="5">5</point><point value="6">6</point><point value="7">7</point>
+      <point value="8">8</point><point value="9">9</point><point value="10">Extremely likely</point>
+    </scale>
+  </scales>
+</lookups>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sample data: customers (IT service providers) and their clients. All names are fictional. -->
+<customers>
+  <customer id="cust-vertex" name="Vertex IT Services" createdAt="2026-09-01">
+    <client id="cli-harbor" name="Harbor Mutual Insurance" industry="insurance" tier="strategic" owner="Anita Rao" createdAt="2026-09-02">
+      <lob id="lob-claims">Claims operations</lob>
+      <lob id="lob-benefits">Group benefits</lob>
+      <engagement id="eng-h1" lob="lob-claims" model="managed_services" workType="run" start="2024-07-01" end="2027-06-30" reference="SOW-1042">
+        <serviceLine code="app_maintenance"/>
+        <serviceLine code="service_desk"/>
+      </engagement>
+      <engagement id="eng-h2" lob="lob-claims" model="time_materials" workType="project" start="2026-03-01" end="2027-02-28" reference="PO-77310" description="Claims platform upgrade">
+        <serviceLine code="app_development"/>
+        <serviceLine code="qa_testing"/>
+      </engagement>
+      <engagement id="eng-h3" lob="lob-benefits" model="time_materials" workType="change" start="2026-01-01" end="2026-12-31">
+        <serviceLine code="app_development"/>
+      </engagement>
+      <contact id="con-h1" name="Dana Whitfield" email="dana.whitfield@harbormutual.example" role="executive_sponsor" lob=""/>
+      <contact id="con-h2" name="Marcus Lee" email="marcus.lee@harbormutual.example" role="it_head" lob="lob-claims"/>
+      <contact id="con-h3" name="Priya Raman" email="priya.raman@harbormutual.example" role="program_manager" lob="lob-benefits"/>
+      <contact id="con-h4" name="Tom Okafor" email="tom.okafor@harbormutual.example" role="business_user" lob="lob-claims"/>
+    </client>
+    <client id="cli-crestline" name="Crestline Retail" industry="retail" tier="key" owner="Anita Rao" createdAt="2026-09-05">
+      <lob id="lob-stores">Store systems</lob>
+      <engagement id="eng-c1" lob="lob-stores" model="managed_services" workType="run" start="2025-02-01" end="2028-01-31" reference="MSA-221">
+        <serviceLine code="cloud_ops"/>
+        <serviceLine code="service_desk"/>
+      </engagement>
+      <contact id="con-c1" name="Elena Brooks" email="elena.brooks@crestline.example" role="it_head" lob=""/>
+      <contact id="con-c2" name="Sam Patel" email="sam.patel@crestline.example" role="program_manager" lob="lob-stores"/>
+    </client>
+  </customer>
+  <customer id="cust-bluepeak" name="Bluepeak Technologies" createdAt="2026-09-10">
+    <client id="cli-ironworks" name="Ironworks Manufacturing" industry="manufacturing" tier="standard" owner="Leo Grant" createdAt="2026-09-11">
+      <lob id="lob-plant">Plant IT</lob>
+      <engagement id="eng-i1" lob="lob-plant" model="fixed_price" workType="project" start="2026-05-01" end="2026-11-30" reference="SOW-88" description="MES rollout">
+        <serviceLine code="app_development"/>
+        <serviceLine code="consulting"/>
+      </engagement>
+      <contact id="con-i1" name="Grace Kim" email="grace.kim@ironworks.example" role="program_manager" lob="lob-plant"/>
+      <contact id="con-i2" name="Raj Mehta" email="raj.mehta@ironworks.example" role="business_user" lob="lob-plant"/>
+    </client>
+  </customer>
+</customers>

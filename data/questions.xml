@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Question library. A facet with no <tag> means the question applies to all values of that facet. -->
+<questions>
+  <question id="q-001" status="published" type="nps" scale="likelihood_11" framework="nps" primary="partnership" owner="" benchmark="true" createdAt="2026-09-01">
+    <text>How likely are you to recommend [PROVIDER] to a colleague?</text>
+    <followUp max="6">What is the main reason for your score?</followUp>
+  </question>
+  <question id="q-002" status="published" type="rating" scale="quality_5" primary="proactive_updates" owner="" createdAt="2026-09-01">
+    <text>How well does [PROVIDER] keep you informed about risks or delays in [LOB] before they affect you?</text>
+    <tag facet="theme" codes="risk_management"/>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal post_escalation"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head program_manager"/>
+    <followUp max="2">Can you share an example where a risk reached you too late?</followUp>
+  </question>
+  <question id="q-003" status="published" type="rating" scale="quality_5" primary="responsiveness" owner="" createdAt="2026-09-01">
+    <text>How quickly does the team respond when you raise a question or request?</text>
+    <tag facet="survey_goal" codes="relationship_health post_escalation onboarding"/>
+    <tag facet="respondent_role" codes="it_head program_manager business_user end_user"/>
+  </question>
+  <question id="q-004" status="published" type="rating" scale="agree_5" primary="escalation_handling" owner="" createdAt="2026-09-01">
+    <text>When something goes wrong, issues are escalated and resolved quickly.</text>
+    <tag facet="survey_goal" codes="relationship_health post_escalation"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+    <tag facet="work_type" codes="run"/>
+  </question>
+  <question id="q-005" status="published" type="rating" scale="agree_5" primary="sla_management" owner="" createdAt="2026-09-01">
+    <text>[PROVIDER] consistently meets the agreed service levels.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal post_escalation"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+    <tag facet="engagement_model" codes="managed_services"/>
+    <tag facet="work_type" codes="run"/>
+  </question>
+  <question id="q-006" status="published" type="rating" scale="quality_5" primary="accuracy_of_deliverables" owner="" createdAt="2026-09-01">
+    <text>How well do deliverables meet the agreed requirements the first time?</text>
+    <tag facet="survey_goal" codes="relationship_health post_project pre_renewal"/>
+    <tag facet="respondent_role" codes="it_head program_manager business_user"/>
+    <tag facet="work_type" codes="change project"/>
+  </question>
+  <question id="q-007" status="published" type="rating" scale="agree_5" primary="defects_rework" owner="" createdAt="2026-09-01">
+    <text>Deliverables reach us with few defects that need rework.</text>
+    <tag facet="survey_goal" codes="relationship_health post_project"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+  </question>
+  <question id="q-008" status="published" type="rating" scale="frequency_5" primary="consistency" owner="" createdAt="2026-09-01">
+    <text>How often is the quality of service consistent from month to month?</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head program_manager"/>
+  </question>
+  <question id="q-009" status="published" type="rating" scale="agree_5" primary="partnership" owner="" createdAt="2026-09-01">
+    <text>[PROVIDER] works as a partner in our goals, not just a supplier.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal expansion_discovery"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head"/>
+  </question>
+  <question id="q-010" status="published" type="rating" scale="agree_5" primary="joint_problem_solving" owner="" createdAt="2026-09-01">
+    <text>When problems come up, the team works with us to solve them.</text>
+    <tag facet="survey_goal" codes="relationship_health post_escalation post_project"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+  </question>
+  <question id="q-011" status="published" type="rating" scale="quality_5" primary="proactive_improvement" owner="" createdAt="2026-09-01">
+    <text>How well does [PROVIDER] bring ideas that improve [LOB] without being asked?</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal expansion_discovery"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head"/>
+  </question>
+  <question id="q-012" status="published" type="rating" scale="agree_5" primary="automation_efficiency" owner="" createdAt="2026-09-01">
+    <text>The team has reduced manual effort through automation or better tooling.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal expansion_discovery"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+    <tag facet="work_type" codes="run"/>
+  </question>
+  <question id="q-013" status="published" type="rating" scale="agree_5" primary="cost_savings" owner="" createdAt="2026-09-01">
+    <text>[PROVIDER] has helped us lower the cost of running our services.</text>
+    <tag facet="survey_goal" codes="pre_renewal expansion_discovery relationship_health"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head procurement"/>
+  </question>
+  <question id="q-014" status="published" type="rating" scale="satisfaction_5" primary="value_for_money" owner="" createdAt="2026-09-01">
+    <text>How satisfied are you with the value you receive for what you pay?</text>
+    <tag facet="survey_goal" codes="pre_renewal relationship_health"/>
+    <tag facet="respondent_role" codes="executive_sponsor procurement it_head"/>
+    <followUp max="2">What would make the service better value for you?</followUp>
+  </question>
+  <question id="q-015" status="published" type="multiple_choice" primary="renewal_intent" owner="" createdAt="2026-09-01">
+    <text>Before the contract renews, which of these would you most want us to change?</text>
+    <option>Pricing</option><option>Quality of delivery</option><option>Speed of response</option>
+    <option>Team stability</option><option>More new ideas</option><option>Nothing, we are satisfied</option>
+    <tag facet="survey_goal" codes="pre_renewal"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head procurement"/>
+    <tag facet="lifecycle_stage" codes="pre_renewal"/>
+  </question>
+  <question id="q-016" status="published" type="rating" scale="agree_5" primary="billing_accuracy" owner="" createdAt="2026-09-01">
+    <text>Invoices from [PROVIDER] are accurate and easy to understand.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal"/>
+    <tag facet="respondent_role" codes="procurement"/>
+  </question>
+  <question id="q-017" status="published" type="rating" scale="quality_5" primary="executive_reviews" owner="" createdAt="2026-09-01">
+    <text>How useful are the business reviews [PROVIDER] holds with your leadership?</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal"/>
+    <tag facet="respondent_role" codes="executive_sponsor"/>
+  </question>
+  <question id="q-018" status="published" type="rating" scale="agree_5" primary="risk_management" owner="" createdAt="2026-09-01">
+    <text>Risks are identified early and managed before they become issues.</text>
+    <tag facet="survey_goal" codes="relationship_health post_project pre_renewal"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+  </question>
+  <question id="q-019" status="published" type="rating" scale="agree_5" primary="expertise" owner="" createdAt="2026-09-01">
+    <text>The team has the skills and knowledge the work requires.</text>
+    <tag facet="survey_goal" codes="relationship_health onboarding post_project"/>
+    <tag facet="respondent_role" codes="it_head program_manager business_user"/>
+  </question>
+  <question id="q-020" status="published" type="rating" scale="agree_5" primary="team_stability" owner="" createdAt="2026-09-01">
+    <text>Key people on the account stay long enough to build real knowledge of our business.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal onboarding"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+  </question>
+  <question id="q-021" status="published" type="rating" scale="quality_5" primary="knowledge_sharing" owner="" createdAt="2026-09-01">
+    <text>How well was knowledge transferred to the new team during transition?</text>
+    <tag facet="survey_goal" codes="onboarding"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+    <tag facet="lifecycle_stage" codes="transition"/>
+  </question>
+  <question id="q-022" status="published" type="rating" scale="agree_5" primary="data_protection" owner="" createdAt="2026-09-01">
+    <text>We trust [PROVIDER] to handle our data securely.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head"/>
+  </question>
+  <question id="q-023" status="published" type="rating" scale="agree_5" primary="regulatory_compliance" owner="" createdAt="2026-09-01">
+    <text>The team understands the insurance regulations that affect our systems.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+    <tag facet="industry" codes="insurance"/>
+  </question>
+  <question id="q-024" status="published" type="rating" scale="agree_5" primary="operational_stability" owner="" createdAt="2026-09-01">
+    <text>Our systems in [LOB] are stable and available when we need them.</text>
+    <tag facet="survey_goal" codes="relationship_health post_escalation pre_renewal"/>
+    <tag facet="respondent_role" codes="it_head business_user end_user"/>
+    <tag facet="work_type" codes="run"/>
+  </question>
+  <question id="q-025" status="published" type="rating" scale="quality_5" primary="impact_on_goals" owner="" createdAt="2026-09-01">
+    <text>How well has this work helped [CLIENT] reach its business goals?</text>
+    <tag facet="survey_goal" codes="relationship_health post_project pre_renewal expansion_discovery"/>
+    <tag facet="respondent_role" codes="executive_sponsor"/>
+  </question>
+  <question id="q-026" status="published" type="open_text" primary="partnership" owner="" createdAt="2026-09-01">
+    <text>What is one thing [PROVIDER] should do differently?</text>
+  </question>
+  <question id="q-027" status="published" type="rating" scale="agree_5" primary="user_adoption" owner="" createdAt="2026-09-01">
+    <text>The solutions delivered are being used by our teams as intended.</text>
+    <tag facet="survey_goal" codes="post_project expansion_discovery"/>
+    <tag facet="respondent_role" codes="business_user program_manager"/>
+    <tag facet="work_type" codes="change project"/>
+  </question>
+  <question id="q-028" status="published" type="rating" scale="agree_5" primary="time_to_market" owner="" createdAt="2026-09-01">
+    <text>The team helps us deliver changes to the business quickly.</text>
+    <tag facet="survey_goal" codes="relationship_health expansion_discovery post_project"/>
+    <tag facet="respondent_role" codes="executive_sponsor program_manager"/>
+    <tag facet="work_type" codes="change project"/>
+  </question>
+  <question id="q-029" status="published" type="yes_no" primary="escalation_handling" owner="" createdAt="2026-09-01">
+    <text>Have you had to escalate an issue with [PROVIDER] in the last six months?</text>
+    <tag facet="survey_goal" codes="post_escalation relationship_health"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+  </question>
+  <question id="q-030" status="published" type="rating" scale="agree_5" primary="meeting_effectiveness" owner="" createdAt="2026-09-01">
+    <text>Status meetings are well prepared and end with clear actions and owners.</text>
+    <tag facet="survey_goal" codes="relationship_health post_project"/>
+    <tag facet="respondent_role" codes="program_manager it_head"/>
+  </question>
+  <question id="q-031" status="published" type="rating" scale="agree_5" primary="expertise" owner="" createdAt="2026-09-01">
+    <text>The team understands our plant operations and production constraints.</text>
+    <tag facet="survey_goal" codes="relationship_health post_project"/>
+    <tag facet="respondent_role" codes="program_manager business_user it_head"/>
+    <tag facet="industry" codes="manufacturing"/>
+  </question>
+  <question id="q-032" status="published" type="rating" scale="agree_5" primary="risk_management" owner="" createdAt="2026-09-01">
+    <text>The team plans changes around our peak trading periods.</text>
+    <tag facet="survey_goal" codes="relationship_health pre_renewal"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+    <tag facet="industry" codes="retail"/>
+  </question>
+  <question id="q-033" status="published" type="rating" scale="agree_5" primary="attitude_ownership" owner="" createdAt="2026-09-01">
+    <text>The team takes ownership of problems instead of passing them on.</text>
+    <tag facet="survey_goal" codes="relationship_health post_escalation"/>
+    <tag facet="respondent_role" codes="it_head program_manager business_user"/>
+  </question>
+  <question id="q-034" status="published" type="rating" scale="agree_5" primary="technology_adoption" owner="" createdAt="2026-09-01">
+    <text>[PROVIDER] helps us adopt new technology that benefits [LOB].</text>
+    <tag facet="survey_goal" codes="expansion_discovery pre_renewal relationship_health"/>
+    <tag facet="respondent_role" codes="executive_sponsor it_head"/>
+  </question>
+  <question id="q-035" status="published" type="rating" scale="quality_5" primary="reporting_cadence" owner="" createdAt="2026-09-01">
+    <text>How useful are the regular status reports you receive from [PROVIDER]?</text>
+    <tag facet="survey_goal" codes="relationship_health post_escalation"/>
+    <tag facet="respondent_role" codes="it_head program_manager"/>
+  </question>
+</questions>
