@@ -21,7 +21,9 @@
   --focus: #3E8B82;
   --font: 'Instrument Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --radius: 10px;
-  --header-h: 108px;
+  --appbar-h: 64px;
+  --bottomnav-h: 0px;
+  --sticky-top: calc(var(--appbar-h) + 14px);
 }
 
 * { box-sizing: border-box; }
@@ -35,29 +37,35 @@ code { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; 
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* ---------- Header (white, with a strip in the survey colours) ---------- */
-.topbar { position: relative; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px 24px;
-  padding: 16px max(20px, env(safe-area-inset-right, 0px)) 6px max(20px, env(safe-area-inset-left, 0px));
-  background: var(--surface); color: var(--ink); }
-.topbar::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px;
+/* ---------- App bar: pinned to the top; brand, sections and user in one row ---------- */
+.appbar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 8px 20px; min-height: var(--appbar-h);
+  padding: 4px max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px));
+  background: rgba(255, 255, 255, .94); backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--line); color: var(--ink); }
+.appbar::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px;
   background: linear-gradient(90deg, #1E5B54 0 55%, #5A51C9 55% 78%, #C07A12 78% 100%); }
-.brand { display: flex; align-items: center; gap: 10px; }
+.appbar.is-scrolled { box-shadow: 0 6px 18px rgba(23, 34, 44, .08); }
+.brand { display: flex; align-items: center; gap: 10px; flex: none; }
 .logo { width: 26px; height: 26px; border-radius: 7px; background:
   linear-gradient(90deg, #1E5B54 0 58%, #5A51C9 58% 80%, #C07A12 80% 100%); }
-.brand-name { font-size: 18px; font-weight: 700; font-stretch: 85%; letter-spacing: 0; }
+.brand-name { font-size: 18px; font-weight: 700; font-stretch: 85%; letter-spacing: 0; white-space: nowrap; }
 .demo-tag { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); }
-.topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.appbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex: none; }
 .tenant { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 13px; color: var(--muted); }
-.tenant select { min-height: 36px; width: auto; min-width: 190px; }
-.storage-badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); }
+.tenant select { min-height: 36px; width: auto; min-width: 170px; padding-top: 6px; padding-bottom: 6px; }
+.storage-badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); white-space: nowrap; }
 .storage-badge.local { background: var(--warn-soft); color: var(--warn-ink); }
 
-.tabs { display: flex; gap: 2px; overflow-x: auto; background: var(--surface); border-bottom: 1px solid var(--line);
-  padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); }
-.tabs button { min-height: 46px; padding: 0 14px; border: 0; border-bottom: 3px solid transparent; background: none;
+.tabs { display: flex; align-self: stretch; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs button { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 0 12px; border: 0; background: none;
   font: inherit; font-size: 15px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.tabs button::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: transparent; }
 .tabs button:hover { color: var(--ink); }
-.tabs button[aria-selected="true"] { color: var(--accent-strong); border-bottom-color: var(--accent); font-weight: 650; }
+.tabs button[aria-selected="true"] { color: var(--accent-strong); font-weight: 650; }
+.tabs button[aria-selected="true"]::after { background: var(--accent); }
+.tab-icon { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.tab-short { display: none; }
 
 .banner { max-width: 1320px; margin: 14px auto 0; padding: 9px 14px; border-radius: 8px; background: var(--warn-soft); color: var(--warn-ink); font-size: 14px;
   width: calc(100% - 2 * max(20px, env(safe-area-inset-left, 0px))); }
@@ -168,8 +176,8 @@ textarea { resize: vertical; line-height: 1.45; }
 .row-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 /* ---------- New survey: composer panel ---------- */
-.composer { flex: 1 1 380px; min-width: 0; position: sticky; top: 14px; align-self: flex-start;
-  display: flex; flex-direction: column; max-height: calc(100vh - 28px);
+.composer { flex: 1 1 380px; min-width: 0; position: sticky; top: var(--sticky-top); align-self: flex-start;
+  display: flex; flex-direction: column; max-height: calc(100vh - var(--sticky-top) - 14px);
   background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
 .composer-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line-soft); }
 .composer-head h2 { font-size: 19px; }
@@ -223,14 +231,14 @@ textarea { resize: vertical; line-height: 1.45; }
 .custom-box { margin-top: 14px; padding: 16px; border: 1px dashed #AEB8C1; border-radius: var(--radius); background: var(--surface-2); }
 
 /* Sticky save bar (survey editor) and sticky form actions (question form) */
-.save-bar { margin-top: 4px; position: sticky; bottom: max(12px, env(safe-area-inset-bottom, 0px)); z-index: 5; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+.save-bar { margin-top: 4px; position: sticky; bottom: calc(var(--bottomnav-h) + max(12px, env(safe-area-inset-bottom, 0px))); z-index: 5; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   padding: 10px 14px; border-radius: 12px; background: var(--surface); color: var(--ink); border: 1px solid var(--line);
   border-left: 5px solid #C07A12; box-shadow: 0 8px 24px rgba(23, 34, 44, .14); }
 .save-bar .save-state { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; }
 .save-bar .btn { min-height: 40px; }
 .save-bar.is-clean { border-left-color: var(--accent); box-shadow: none; }
 .save-bar.is-clean .save-state { color: var(--muted); font-weight: 500; }
-.form-actions { position: sticky; bottom: 0; z-index: 4; margin: 18px -22px -22px; padding: 12px 22px; background: var(--surface);
+.form-actions { position: sticky; bottom: var(--bottomnav-h); z-index: 4; margin: 18px -22px -22px; padding: 12px 22px; background: var(--surface);
   border-top: 1px solid var(--line); border-radius: 0 0 12px 12px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 
 /* ---------- Question library ---------- */
@@ -245,7 +253,7 @@ textarea { resize: vertical; line-height: 1.45; }
 .confirm-box .actions { margin-top: 8px; justify-content: flex-start; }
 .card.editing { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .form-section { font-size: 16px !important; margin: 24px 0 2px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
-.preview { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); position: sticky; top: 14px; }
+.preview { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); position: sticky; top: var(--sticky-top); }
 .preview .scale { display: grid; gap: 6px; text-align: center; font-size: 11px; color: var(--muted); margin-top: 12px; }
 .preview .scale span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .preview .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #9AA5AF; background: var(--surface); }
@@ -253,7 +261,7 @@ textarea { resize: vertical; line-height: 1.45; }
 
 /* ---------- Settings ---------- */
 .settings { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 20px; align-items: start; }
-.settings-menu { display: flex; flex-direction: column; gap: 4px; padding: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: 14px; }
+.settings-menu { display: flex; flex-direction: column; gap: 4px; padding: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; position: sticky; top: var(--sticky-top); }
 .settings-link { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0 12px;
   border: 0; border-radius: 8px; background: none; color: var(--ink-2); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
 .settings-link:hover { background: var(--surface-2); }
@@ -275,7 +283,7 @@ textarea { resize: vertical; line-height: 1.45; }
 pre.xml { margin: 0; max-height: 560px; overflow: auto; padding: 14px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); font-size: 13px; line-height: 1.5; }
 
 /* Toast */
-.toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); max-width: calc(100% - 32px);
+.toast { position: fixed; left: 50%; top: calc(var(--appbar-h) + 12px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); max-width: calc(100% - 32px);
   padding: 11px 16px 11px 14px; border-radius: 10px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-left: 4px solid var(--accent);
   font-size: 14px; box-shadow: 0 10px 30px rgba(23, 34, 44, .25); z-index: 50; }
 .toast.error { border-left-color: var(--danger); color: var(--danger); }
@@ -285,7 +293,7 @@ pre.xml { margin: 0; max-height: 560px; overflow: auto; padding: 14px; border-ra
   /* The composer flows under the form; its footer becomes a bar fixed to the bottom of the screen. */
   .composer { position: static; max-height: none; overflow: visible; }
   .composer-body { overflow: visible; }
-  .composer-foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; border-radius: 0; box-shadow: 0 -6px 18px rgba(23, 34, 44, .12);
+  .composer-foot { position: fixed; left: 0; right: 0; bottom: var(--bottomnav-h); z-index: 20; border-radius: 0; box-shadow: 0 -6px 18px rgba(23, 34, 44, .12);
     padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   #tab-survey { padding-bottom: 76px; }
   .settings { grid-template-columns: 1fr; }
@@ -296,7 +304,6 @@ pre.xml { margin: 0; max-height: 560px; overflow: auto; padding: 14px; border-ra
 @media (max-width: 640px) {
   .qcard { flex-direction: column; }
   .q-actions { flex-direction: row; flex-wrap: wrap; }
-  .topbar, .tabs { padding-left: 16px; padding-right: 16px; }
   main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .page-head h1 { font-size: 26px; }
   .composer-foot .foot-summary { font-size: 13px; }
@@ -308,3 +315,51 @@ pre.xml { margin: 0; max-height: 560px; overflow: auto; padding: 14px; border-ra
 .stats { display: flex; gap: 22px; flex-wrap: wrap; }
 .stat b { display: block; font-size: 28px; font-weight: 700; font-stretch: 75%; line-height: 1.1; color: var(--accent); }
 .stat span { font-size: 13px; color: var(--muted); }
+
+/* Compact New survey form */
+#new-survey-card { padding: 20px 22px; }
+.form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 16px; margin-top: 16px; }
+.form-grid .span-2 { grid-column: span 2; }
+.chips.compact .chip { min-height: 40px; padding: 0 14px; font-size: 14px; }
+.segmented { display: flex; padding: 3px; gap: 3px; border: 1px solid var(--field); border-radius: 10px; background: var(--surface-2); }
+.segmented label { position: relative; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 0 10px;
+  border-radius: 7px; font-size: 14px; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.segmented label:hover { background: var(--surface); }
+.segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.segmented label:has(input:checked) { background: var(--accent); color: #FFFFFF; font-weight: 650; }
+.segmented label:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 1px; }
+.seg-n { font-size: 12px; opacity: .75; }
+@media (max-width: 1100px) { .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: auto; } }
+.form-grid > .field + .field { margin-top: 0; }
+
+/* ---------- Medium screens: app bar wraps the tabs onto their own row ---------- */
+@media (max-width: 1180px) and (min-width: 761px) {
+  :root { --appbar-h: 108px; }
+  .appbar { flex-wrap: wrap; padding-top: 10px; }
+  .tabs { order: 3; flex-basis: 100%; height: 46px; margin: 0 -8px; }
+}
+
+/* ---------- Phones: sections move to a bottom tab bar ---------- */
+@media (max-width: 760px) {
+  :root { --appbar-h: 58px; --bottomnav-h: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  .appbar { padding-left: 16px; padding-right: 16px; gap: 10px; background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }  /* a filter would trap the fixed tab bar */
+  .demo-tag, .tenant-label { display: none; }
+  .tenant select { min-width: 0; max-width: 46vw; }
+  .storage-badge { display: none; }   /* the banner under the header says the same */
+  .appbar-right { min-width: 0; }
+  .settings-menu { position: sticky; top: calc(var(--appbar-h) + 8px); z-index: 10; box-shadow: 0 6px 16px rgba(23, 34, 44, .08); }
+  .settings-link { min-height: 40px; font-size: 14px; }
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; height: var(--bottomnav-h); align-self: auto;
+    padding: 6px max(6px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(6px, env(safe-area-inset-left, 0px));
+    background: rgba(255, 255, 255, .97); border-top: 1px solid var(--line); box-shadow: 0 -4px 16px rgba(23, 34, 44, .06); gap: 0; overflow: visible; }
+  .tabs button { flex: 1 1 0; flex-direction: column; justify-content: center; gap: 3px; padding: 0 2px; font-size: 11px; border-radius: 10px; min-width: 0; }
+  .tabs button::after { display: none; }
+  .tabs button[aria-selected="true"] { color: var(--accent-strong); }
+  .tabs button[aria-selected="true"] .tab-icon { background: var(--accent-soft); border-radius: 999px; padding: 3px 14px; width: 52px; height: 28px; }
+  .tab-icon { width: 22px; height: 22px; padding: 0; }
+  .tab-label { display: none; }
+  .tab-short { display: block; }
+  main { padding-bottom: calc(var(--bottomnav-h) + 24px); }
+  #tab-survey { padding-bottom: 76px; }
+}

@@ -117,7 +117,7 @@
   const newSurveyForm = () => ({ title: '', industry: '', goal: '', audience: '', themes: [], dipstick: 'standard', core: dipstickDefault('standard'), themeCounts: {}, open: {}, errors: [] });
   let N = null;                                                                         // New survey form
   const V = { selected: '', draft: null, search: '', type: '', fitOnly: true, clientName: '', custom: null };  // Surveys tab
-  const Q = { search: '', industry: '', status: 'active', showForm: false, form: null, confirm: null };       // Question library
+  const Q = { section: 'new', search: '', industry: '', status: 'active', form: null, confirm: null, flash: '' };       // Question library
   const D = { file: 'surveys', confirmReset: false };                                  // XML data tab
 
   const customers = () => readCustomers();
@@ -254,51 +254,40 @@
 
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>New survey</h1><p>Name the survey and choose who it is for. You get at least ${CORE_MIN} core questions, plus extra questions for each theme you pick. Edit them after you create the survey and tag clients later.</p></div>
+        <div><h1>New survey</h1><p>Pick who the survey is for; the questions build up on the right. You can edit them after you create it.</p></div>
       </div>
       <div class="cols">
         <div class="col-main">
           <div class="card" id="new-survey-card">
             ${f.errors.length ? `<div class="note warn" role="alert" style="margin-bottom:16px"><strong>Fill these in to create the survey:</strong> ${f.errors.map(esc).join(', ')}.</div>` : ''}
-            <div class="form-group">
-              <h2>About the survey</h2>
-              <p class="sub">These decide which core questions are picked.</p>
+            <div class="field">
+              <label class="label" for="ns-title">Survey title <span class="req">*</span></label>
+              <input type="text" id="ns-title" data-act="title" value="${esc(f.title)}" maxlength="120" placeholder="e.g. Harbor Mutual executive insight, Q4 2026">
+            </div>
+            <div class="form-grid">
               <div class="field">
-                <label class="label" for="ns-title">Survey title <span class="req">*</span></label>
-                <input type="text" id="ns-title" data-act="title" value="${esc(f.title)}" maxlength="120" placeholder="e.g. Harbor Mutual executive insight, Q4 2026">
-              </div>
-              <div class="grid">
-                <div class="field">
-                  <label class="label" for="ns-industry">Industry <span class="req">*</span></label>
-                  <select id="ns-industry" data-act="industry">${optionList(LK.facets.industry, f.industry, 'Choose industry')}</select>
-                </div>
-                <div class="field">
-                  <label class="label" for="ns-goal">Goal <span class="req">*</span></label>
-                  <select id="ns-goal" data-act="goal"${f.industry ? '' : ' disabled'}>${optionList(goals, f.goal, f.industry ? 'Choose goal' : 'Choose an industry first')}</select>
-                </div>
+                <label class="label" for="ns-industry">Industry <span class="req">*</span></label>
+                <select id="ns-industry" data-act="industry">${optionList(LK.facets.industry, f.industry, 'Choose industry')}</select>
               </div>
               <div class="field">
-                <span class="label" id="ns-aud-label">Is this for CXO or non-CXO? <span class="req">*</span></span>
-                <div class="chips" role="radiogroup" aria-labelledby="ns-aud-label">${LK.facets.audience.map((a) => chip(`ns-aud-${a.code}`, 'audience', a.code, f.audience === a.code, a.label, 'radio', 'ns-audience')).join('')}</div>
-                ${f.audience ? `<span class="hint">${esc((fv('audience', f.audience) || {}).description)}</span>` : ''}
+                <label class="label" for="ns-goal">Goal <span class="req">*</span></label>
+                <select id="ns-goal" data-act="goal"${f.industry ? '' : ' disabled'}>${optionList(goals, f.goal, f.industry ? 'Choose goal' : 'Choose an industry first')}</select>
               </div>
-            </div>
-
-            <div class="form-group">
-              <h2>Themes</h2>
-              <p class="sub">Optional. Themes add ${THEME_EXTRA} questions in total, shared between the themes you pick: one theme adds ${THEME_EXTRA}, two themes add ${Math.ceil(THEME_EXTRA / 2)} and ${Math.floor(THEME_EXTRA / 2)}.</p>
-              <div class="chips">${LK.facets.theme.map((t) => chip(`ns-theme-${t.code}`, 'theme', t.code, f.themes.includes(t.code), t.label, 'checkbox', '', swatch(themeColor(t.code)))).join('')}</div>
-            </div>
-
-            <div class="form-group">
-              <h2 id="ns-dip-label">Dip Stick</h2>
-              <p class="sub">How deep the survey goes.</p>
-              <div class="cards-pick" role="radiogroup" aria-labelledby="ns-dip-label">
-                ${LK.facets.dipstick.map((d) => `
-                  <label class="pick" for="ns-dip-${d.code}">
-                    <input type="radio" name="ns-dipstick" id="ns-dip-${d.code}" data-act="dipstick" value="${d.code}"${f.dipstick === d.code ? ' checked' : ''}>
-                    <strong>${esc(d.label)}</strong><span>${esc(d.description)}, ${d.questions} core questions</span>
-                  </label>`).join('')}
+              <div class="field">
+                <span class="label" id="ns-aud-label">Audience <span class="req">*</span></span>
+                <div class="segmented" role="radiogroup" aria-labelledby="ns-aud-label">
+                  ${LK.facets.audience.map((a) => `<label for="ns-aud-${a.code}" title="${esc(a.description)}"><input type="radio" name="ns-audience" id="ns-aud-${a.code}" data-act="audience" value="${a.code}"${f.audience === a.code ? ' checked' : ''}>${esc(a.label)}</label>`).join('')}
+                </div>
+              </div>
+              <div class="field span-2">
+                <span class="label">Themes <span class="hint">(optional, adds ${THEME_EXTRA} questions)</span></span>
+                <div class="chips compact">${LK.facets.theme.map((t) => chip(`ns-theme-${t.code}`, 'theme', t.code, f.themes.includes(t.code), t.label, 'checkbox', '', swatch(themeColor(t.code)))).join('')}</div>
+              </div>
+              <div class="field">
+                <span class="label" id="ns-dip-label">Dip Stick</span>
+                <div class="segmented" role="radiogroup" aria-labelledby="ns-dip-label">
+                  ${LK.facets.dipstick.map((d) => `<label for="ns-dip-${d.code}" title="${esc(d.description)}, ${d.questions} core questions"><input type="radio" name="ns-dipstick" id="ns-dip-${d.code}" data-act="dipstick" value="${d.code}"${f.dipstick === d.code ? ' checked' : ''}>${esc(d.label)} <span class="seg-n">${d.questions}</span></label>`).join('')}
+                </div>
               </div>
             </div>
           </div>
@@ -353,12 +342,18 @@
     const c = document.querySelector('#tab-survey .composer');
     if (!c || document.getElementById('tab-survey').hidden) return;
     if (window.innerWidth <= 900) { c.style.maxHeight = ''; return; }
-    const top = Math.max(14, c.getBoundingClientRect().top);
+    const bar = document.querySelector('.appbar');
+    const minTop = (bar ? bar.getBoundingClientRect().bottom : 0) + 14;
+    const top = Math.max(minTop, c.getBoundingClientRect().top);
     c.style.maxHeight = `${Math.max(320, window.innerHeight - top - 14)}px`;
   }
   let fitQueued = false;
   const queueFit = () => { if (!fitQueued) { fitQueued = true; requestAnimationFrame(() => { fitQueued = false; fitComposer(); }); } };
-  window.addEventListener('scroll', queueFit, { passive: true });
+  window.addEventListener('scroll', () => {
+    queueFit();
+    const bar = document.querySelector('.appbar');
+    if (bar) bar.classList.toggle('is-scrolled', window.scrollY > 4);
+  }, { passive: true });
   window.addEventListener('resize', queueFit);
 
   async function createSurvey() {
@@ -824,7 +819,7 @@
 
   function searchExplain(search) {
     const c = interpretSearch(search);
-    if (!c.length) return search.trim() ? '<p class="hint search-explain">No industry, goal, audience, theme or Dip Stick has that name; searching the question text only.</p>' : '';
+    if (!c.length) return '';
     return `<div class="search-explain"><span class="hint">“${esc(search.trim())}” also means:</span> ${c.slice(0, 8).map((e) => `<span class="tag soft-tag">${esc(FACET_NAMES[e.facet])}: ${esc(e.label)}</span>`).join('')}</div>`;
   }
   const reasonLine = (r) => (r.reasons.length ? `<span class="match-why">Matched on ${esc([...new Set(r.reasons)].join(' · '))}</span>` : '');
@@ -865,25 +860,45 @@
 
   function renderQuestions() {
     const el = $('#tab-questions');
+    const editing = Boolean(Q.form && Q.form.editId);
+    const menu = [
+      { code: 'new', label: editing ? `Edit question ${Q.form.editId}` : 'New question', count: '' },
+      { code: 'search', label: 'Search & edit questions', count: readQuestions().filter((q) => q.status !== 'retired').length },
+    ];
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>Question library</h1><p>Add questions and tag where they apply. Search and edit existing questions below. Saved to <code>questions.xml</code>.</p></div>
+        <div><h1>Question library</h1><p>Add questions and tag where they are used, or find and edit existing ones. Saved to <code>questions.xml</code>.</p></div>
       </div>
-      ${questionForm()}
-      <div class="card" id="q-list-card">
-        <h2>Search and edit questions</h2>
-        <div class="grid" style="margin-bottom:14px">
-          <div class="field"><label class="label" for="q-search">Search</label>
-            <input type="search" id="q-search" data-act="q-search" value="${esc(Q.search)}" placeholder="Keyword, e.g. service levels, AI, claims, renewal"></div>
-          <div class="field"><label class="label" for="q-industry">Industry</label>
-            <select id="q-industry" data-act="q-industry">${optionList(LK.facets.industry, Q.industry, 'All industries')}</select></div>
-          <div class="field"><label class="label" for="q-status">Status</label>
-            <select id="q-status" data-act="q-status">${optionList(Q_STATUS_FILTERS, Q.status)}</select></div>
+      <div class="settings">
+        <nav class="settings-menu" aria-label="Question library">
+          ${menu.map((m) => `<button type="button" class="settings-link" data-act="q-section" data-section="${m.code}"${Q.section === m.code ? ' aria-current="page"' : ''}>${esc(m.label)}${m.count !== '' ? `<span class="count">${m.count}</span>` : ''}</button>`).join('')}
+        </nav>
+        <div class="settings-body">
+          ${Q.section === 'search' ? `
+            <div class="card" id="q-list-card">
+              <h2>Search & edit questions</h2>
+              <div class="grid" style="margin-bottom:14px">
+                <div class="field"><label class="label" for="q-search">Search</label>
+                  <input type="search" id="q-search" data-act="q-search" value="${esc(Q.search)}" placeholder="Keyword, e.g. service levels, AI, claims, renewal"></div>
+                <div class="field"><label class="label" for="q-industry">Industry</label>
+                  <select id="q-industry" data-act="q-industry">${optionList(LK.facets.industry, Q.industry, 'All industries')}</select></div>
+                <div class="field"><label class="label" for="q-status">Status</label>
+                  <select id="q-status" data-act="q-status">${optionList(Q_STATUS_FILTERS, Q.status)}</select></div>
+              </div>
+              <p style="margin:-6px 0 12px"><span class="hint">Searches the question text plus the names of industries, goals, CXO / non-CXO, themes and Dip Stick.</span></p>
+              <div id="q-results"></div>
+            </div>` : questionForm()}
         </div>
-        <p style="margin:-6px 0 12px"><span class="hint">Searches the question text plus the names of industries, goals, CXO / non-CXO, themes and Dip Stick.</span></p>
-        <div id="q-results"></div>
       </div>`;
-    renderQuestionList();
+    if (Q.section === 'search') renderQuestionList();
+  }
+
+  function showQuestionSection(section, focusId) {
+    Q.section = section; Q.confirm = null;
+    renderQuestions();
+    window.scrollTo({ top: 0 });
+    const el = focusId && document.getElementById(focusId);
+    if (el) el.focus({ preventScroll: true });
   }
 
   function renderQuestionList() {
@@ -897,7 +912,7 @@
       <div class="list">${results.map((r) => {
         const q = r.q;
         const used = usage[q.id] || 0;
-        return `<div class="qcard${q.status === 'retired' ? ' is-retired' : ''}${Q.form && Q.form.editId === q.id ? ' is-editing' : ''}" id="qcard-${esc(q.id)}">
+        return `<div class="qcard${q.status === 'retired' ? ' is-retired' : ''}${Q.flash === q.id ? ' is-editing' : ''}" id="qcard-${esc(q.id)}">
           <div style="min-width:0;flex:1"><p>${esc(q.text)}</p><div class="tags">${questionTags(q)}${q.status === 'retired' ? '<span class="badge retired">Retired</span>' : ''}</div>${reasonLine(r)}
             <span class="match-why">${esc(q.id)} · ${used ? `used in ${used} survey${used === 1 ? '' : 's'}` : 'not used in any survey'}${q.updatedAt ? ` · updated ${esc(q.updatedAt)}` : ''}</span>
             ${questionConfirm(q, used)}</div>
@@ -1077,9 +1092,18 @@
       });
       const edited = f.editId;
       Q.form = newQuestionForm();
-      toast(edited ? `${edited} updated in questions.xml.` : 'Question added to questions.xml.');
-      refreshAfterQuestionChange();
-      if (edited) { const card = $(`#qcard-${edited}`); if (card) card.scrollIntoView({ block: 'center' }); }
+      if (edited) {
+        // Back to the list, showing the question that was just edited.
+        Q.section = 'search'; Q.flash = edited;
+        toast(`${edited} updated in questions.xml.`);
+        refreshAfterQuestionChange();
+        const card = $(`#qcard-${edited}`); if (card) card.scrollIntoView({ block: 'center' });
+      } else {
+        toast('Question added. Find it under Search & edit questions.');
+        refreshAfterQuestionChange();
+        window.scrollTo({ top: 0 });
+        const t = $('#qf-text'); if (t) t.focus({ preventScroll: true });
+      }
     } catch (e) {
       toast(`Could not save the question: ${e.message}`, true);
       if (btn) btn.disabled = false;
@@ -1114,12 +1138,18 @@
       case 'edit-q': {
         const q = readQuestions().find((x) => x.id === b.dataset.id);
         if (!q) return;
-        Q.form = editQuestionForm(q); Q.confirm = null;
-        renderQuestions();
-        $('#q-form-card').scrollIntoView({ block: 'start' }); $('#qf-text').focus({ preventScroll: true });
+        Q.form = editQuestionForm(q); Q.flash = '';
+        showQuestionSection('new', 'qf-text');
         return;
       }
-      case 'new-q': case 'cancel-q': case 'clear-q': Q.form = newQuestionForm(); renderQuestions(); return;
+      case 'q-section': {
+        if (b.dataset.section === 'new' && Q.form.editId && Q.section === 'new') return;
+        Q.flash = '';
+        showQuestionSection(b.dataset.section, b.dataset.section === 'new' ? 'qf-text' : 'q-search');
+        return;
+      }
+      case 'new-q': case 'clear-q': Q.form = newQuestionForm(); showQuestionSection('new', 'qf-text'); return;
+      case 'cancel-q': { const id = Q.form.editId; Q.form = newQuestionForm(); Q.flash = id; showQuestionSection('search'); const card = id && $(`#qcard-${id}`); if (card) card.scrollIntoView({ block: 'center' }); return; }
       case 'ask-q': Q.confirm = { id: b.dataset.id, action: b.dataset.action }; renderQuestionList(); { const btn = $(`#qcard-${b.dataset.id} .confirm-box button`); if (btn) btn.focus(); } return;
       case 'confirm-cancel': Q.confirm = null; renderQuestionList(); return;
       case 'confirm-retire': setQuestionStatus(b.dataset.id, 'retired'); return;

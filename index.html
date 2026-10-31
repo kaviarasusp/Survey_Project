@@ -8,31 +8,30 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wdth,wght@0,75..100,400..700;1,75..100,400..700&display=swap">
-  <link rel="stylesheet" href="css/styles.css?v=9">
+  <link rel="stylesheet" href="css/styles.css?v=12">
 </head>
 <body>
-  <header class="topbar">
+  <header class="appbar">
     <div class="brand">
       <span class="logo" aria-hidden="true"></span>
       <span class="brand-name">A4U Surveys</span>
       <span class="demo-tag">Demo</span>
     </div>
-    <div class="topbar-right">
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" id="tab-btn-survey" aria-controls="tab-survey" aria-selected="true" data-tab="survey"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg><span class="tab-label">New survey</span><span class="tab-short" aria-hidden="true">New</span></button>
+      <button type="button" role="tab" id="tab-btn-surveys" aria-controls="tab-surveys" aria-selected="false" data-tab="surveys"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg><span class="tab-label">Surveys</span><span class="tab-short" aria-hidden="true">Surveys</span></button>
+      <button type="button" role="tab" id="tab-btn-questions" aria-controls="tab-questions" aria-selected="false" data-tab="questions"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 5.5c2.5-1 5-1 7.5.5 2.5-1.5 5-1.5 7.5-.5v13c-2.5-1-5-1-7.5.5-2.5-1.5-5-1.5-7.5-.5z"/><path d="M12 6v13"/></svg><span class="tab-label">Question library</span><span class="tab-short" aria-hidden="true">Library</span></button>
+      <button type="button" role="tab" id="tab-btn-admin" aria-controls="tab-admin" aria-selected="false" data-tab="admin"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg><span class="tab-label">Settings</span><span class="tab-short" aria-hidden="true">Settings</span></button>
+      <button type="button" role="tab" id="tab-btn-data" aria-controls="tab-data" aria-selected="false" data-tab="data"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/></svg><span class="tab-label">XML data</span><span class="tab-short" aria-hidden="true">Data</span></button>
+    </nav>
+    <div class="appbar-right">
       <label class="tenant">
-        <span>Signed in as</span>
+        <span class="tenant-label">Signed in as</span>
         <select id="tenant-select" aria-label="Signed in as"></select>
       </label>
       <span id="storage-badge" class="storage-badge" role="status"></span>
     </div>
   </header>
-
-  <nav class="tabs" role="tablist" aria-label="Sections">
-    <button type="button" role="tab" id="tab-btn-survey" aria-controls="tab-survey" aria-selected="true" data-tab="survey">New survey</button>
-    <button type="button" role="tab" id="tab-btn-surveys" aria-controls="tab-surveys" aria-selected="false" data-tab="surveys">Surveys</button>
-    <button type="button" role="tab" id="tab-btn-questions" aria-controls="tab-questions" aria-selected="false" data-tab="questions">Question library</button>
-    <button type="button" role="tab" id="tab-btn-admin" aria-controls="tab-admin" aria-selected="false" data-tab="admin">Settings</button>
-    <button type="button" role="tab" id="tab-btn-data" aria-controls="tab-data" aria-selected="false" data-tab="data">XML data</button>
-  </nav>
 
   <div id="mode-banner" class="banner" hidden></div>
 
@@ -47,8 +46,8 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="js/seed-data.js?v=9"></script>
-  <script src="js/store.js?v=9"></script>
-  <script src="js/app.js?v=9"></script>
+  <script src="js/seed-data.js?v=12"></script>
+  <script src="js/store.js?v=12"></script>
+  <script src="js/app.js?v=12"></script>
 </body>
 </html>

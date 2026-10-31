@@ -2,6 +2,8 @@
 
 A working demo of the A4U survey builder. It's plain HTML and JavaScript with no build step, and all data is stored as XML.
 
+The header (logo, sections and **Signed in as**) stays pinned to the top while you scroll; on phones the sections move to a tab bar at the bottom of the screen.
+
 **Signed in as** (top right) picks who is using the demo:
 
 - **Admin (A4U)** sees every tab and every survey (each labelled with its owner). Surveys Admin creates belong to A4U.
@@ -9,9 +11,9 @@ A working demo of the A4U survey builder. It's plain HTML and JavaScript with no
 
 | Screen | Who | What it does |
 |---|---|---|
-| **New survey** | All | **Survey title**, **Industry**, **Goal** (depends on the industry), **CXO or non-CXO**, optional **Themes**, and **Dip Stick** (Standard or In-depth). The **Your survey** panel on the right shows the total, a bar with the core / theme split, and a section per part (**Core questions**, at least 10, and one per theme) with an editable count and a list you can show or hide. The panel always fits the window: its lists scroll inside it and **Create survey** stays pinned at the bottom (on phones, at the bottom of the screen). |
+| **New survey** | All | **Survey title**, **Industry**, **Goal** (depends on the industry), **CXO or non-CXO**, optional **Themes**, and **Dip Stick** (Standard by default, or In-depth), laid out as a compact three-row form. The **Your survey** panel on the right shows the total, a bar with the core / theme split, and a section per part (**Core questions**, at least 10, and one per theme) with an editable count and a list you can show or hide. The panel always fits the window: its lists scroll inside it and **Create survey** stays pinned at the bottom (on phones, at the bottom of the screen). |
 | **Surveys** | All | Every survey for the customer. A save bar stays at the bottom of the screen while you edit. Open one to edit the title, **tag clients** (one of the customer's clients or a new name), edit each question's wording for this survey, reorder or remove questions, add questions from the library (search with a "fits this survey" filter) or **write a new question** for this survey. **Save changes** writes to `surveys.xml`. |
-| **Question library** | Admin | Add a question: **Question text**, **Question type** (Open ended, Rating scale, Yes / No, NPS), **Scale** (5-point or 7-point for rating questions; NPS is always 0–10), and where it is used: Industry, Goal, CXO / non-CXO, Themes and Dip Stick. **Search and edit** below: edit, retire, reactivate, or delete a question that no survey uses. Saved to `questions.xml`. |
+| **Question library** | Admin | Side menu with two screens. **New question**: **Question text**, **Question type** (Open ended, Rating scale, Yes / No, NPS), **Scale** (5-point or 7-point for rating questions; NPS is always 0–10), and where it is used: Industry, Goal, CXO / non-CXO, Themes and Dip Stick. **Search & edit questions**: search and filter, then edit, retire, reactivate, or delete a question that no survey uses. On **Search & edit questions**, **Edit** opens the question in the form; saving returns to the list. Saved to `questions.xml`. |
 | **Settings** | Admin | Side menu with **Industries and goals** (add an industry with its goals, add goals to an industry) and **Themes** (add a theme). Rename any item; remove items that no question or survey uses. Saved to `lookups.xml`. |
 | **XML data** | Admin | View or download every XML file, reload, or reset the demo data. |
 
