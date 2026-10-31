@@ -12,10 +12,10 @@ A working demo of the A4U survey builder. It's plain HTML and JavaScript with no
 | **New survey** | All | Five choices: **Survey title**, **Industry** (Insurance, Manufacturing), **Goal** (depends on the industry), **CXO or non-CXO**, **Themes** (AI, Outsourcing), plus **Dip Stick** (Standard or In-depth). The right pane shows the recommended survey; the **number of questions** is editable. **Create survey** picks the questions and opens the survey for editing. |
 | **Surveys** | All | Every survey for the customer. Open one to edit the title, **tag clients** (one of the customer's clients or a new name), edit each question's wording for this survey, reorder or remove questions, add questions from the library (search with a "fits this survey" filter) or **write a new question** for this survey. **Save changes** writes to `surveys.xml`. |
 | **Question library** | Admin | Add a question: **Question text**, **Question type** (Open ended, Rating scale, Yes / No, NPS), **Scale** (5-point or 7-point for rating questions; NPS is always 0–10), and where it is used: Industry, Goal, CXO / non-CXO, Themes and Dip Stick. **Search and edit** below: edit, retire, reactivate, or delete a question that no survey uses. Saved to `questions.xml`. |
-| **Admin** | Admin | Manage the reference lists: **industries and their goals** (add an industry with its goals, add goals to an industry) and **themes**. Rename an item or edit its search synonyms; remove items that no question or survey uses. Saved to `lookups.xml`. |
+| **Settings** | Admin | Side menu with **Industries and goals** (add an industry with its goals, add goals to an industry) and **Themes** (add a theme). Rename any item; remove items that no question or survey uses. Saved to `lookups.xml`. |
 | **XML data** | Admin | View or download every XML file, reload, or reset the demo data. |
 
-Goals by industry in the sample data (change them on the **Admin** screen):
+Goals by industry in the sample data (change them in **Settings**):
 
 | Insurance | Manufacturing |
 |---|---|
@@ -27,12 +27,12 @@ A library question is offered for a survey when it has the same **industry**, it
 
 ## How search works
 
-The search box on **Surveys → Add questions** and in the **Question library** matches the question text plus the names and **search synonyms** in `lookups.xml` for industries, goals, CXO / non-CXO, themes and Dip Stick. For example "GenAI" finds AI questions, "dealer" finds Distributor questions and "claims" finds Insurance questions. Each result says why it matched. Synonyms for industries, goals and themes are edited on the **Admin** screen.
+The search box on **Surveys → Add questions** and in the **Question library** matches the question text and the names of industries, goals, CXO / non-CXO, themes and Dip Stick. For example "Distributor" finds questions tagged with the Distributor goal as well as questions that mention distributors. Each result says why it matched.
 
 ## How data is stored
 
 ```
-data/lookups.xml     reference lists (industries, goals, audiences, themes, Dip Stick, scales); edited on the Admin screen
+data/lookups.xml     reference lists (industries, goals, audiences, themes, Dip Stick, scales); edited in Settings
 data/customers.xml   seed data: customers and their clients (offered when tagging a survey)
 data/questions.xml   seed data: question library (96 sample questions: rating, open ended, yes / no, NPS)
 data/surveys.xml     seed data: empty
@@ -80,10 +80,10 @@ If you edit any file in `data/`, run `node tools/build-seed.mjs` so the built-in
 
 1. Signed in as **Admin (A4U)**. **New survey**: type a title, pick **Insurance**, and show that **Goal** lists the five Insurance goals; switch to **Manufacturing** to show its three.
 2. Pick Insurance → **Executive insight**, **CXO**, theme **AI**. The right pane shows 10 recommended questions. Change the number to 8, then switch Dip Stick to **In-depth** (the number moves to 18 and the pane says how many match).
-3. **Create survey**. The survey opens on **Surveys**: reword a question, move one up, remove one, search "GenAI" and add a question, and **Write a new question**.
+3. **Create survey**. The survey opens on **Surveys**: reword a question, move one up, remove one, search "AI" and add a question, and **Write a new question**.
 4. **Tag clients**: pick Harbor Mutual Insurance from the list and type a new client name. **Save changes**.
-5. **Question library**: add a question for Manufacturing → Distributor, Non-CXO, AI, In-depth. Search "dealer" to find it; edit it, retire another one, then filter Status → Retired and reactivate it.
-6. **Admin**: add a theme (e.g. Cloud) and a new industry with its goals (e.g. Retail → Store experience, Ecommerce platform). They appear straight away on New survey and in the Question library.
+5. **Question library**: add a question for Manufacturing → Distributor, Non-CXO, AI, In-depth. Search "Distributor" to find it; edit it, retire another one, then filter Status → Retired and reactivate it.
+6. **Settings**: under **Themes** add a theme (e.g. Cloud) and under **Industries and goals** add a new industry with its goals (e.g. Retail → Store experience, Ecommerce platform). They appear straight away on New survey and in the Question library.
 7. Switch **Signed in as** to Vertex IT Services. Only New survey and Surveys remain; create a survey there and it shows only that customer's surveys, while Admin sees all of them.
 8. Ask your leader to open the same link on their machine. They will see the same questions and surveys.
 

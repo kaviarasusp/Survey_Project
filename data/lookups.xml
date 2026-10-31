@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Reference lists for the survey builder. Read-only in the demo; edited by A4U admins in the full product.
-     synonyms="a|b" are extra search words for the Question library and Add questions search. -->
+<!-- Reference lists for the survey builder. Industries, goals and themes are edited on the Settings screen. -->
 <lookups>
   <facet code="industry" name="Industry">
-    <value code="insurance" synonyms="insurer|carrier|policy|claims|underwriting|P&amp;C|life and annuity">Insurance</value>
-    <value code="manufacturing" synonyms="plant|factory|shop floor|MES|production|supply chain|OEM">Manufacturing</value>
+    <value code="insurance">Insurance</value>
+    <value code="manufacturing">Manufacturing</value>
   </facet>
 
   <!-- Goals depend on the industry (industry="…") -->
   <facet code="survey_goal" name="Goal">
-    <value code="executive_insight" industry="insurance" synonyms="leadership|strategy|C-suite|QBR|business review">Executive insight</value>
-    <value code="csat_services" industry="insurance" synonyms="service satisfaction|service desk|support|tickets|SLA">CSAT Services</value>
-    <value code="project_health" industry="insurance" synonyms="project status|delivery health|schedule|budget|RAG">Project health report</value>
-    <value code="csat" industry="insurance" synonyms="customer satisfaction|satisfaction|pulse">CSAT</value>
-    <value code="product_platform" industry="insurance" synonyms="platform|product|policy admin|core system|roadmap">Product or Platform</value>
-    <value code="product_prelaunch" industry="manufacturing" synonyms="pre-launch|readiness|go-live readiness|launch plan">Product Prelaunch</value>
-    <value code="product_launch_opinion" industry="manufacturing" synonyms="post-launch|launch feedback|launch review|adoption">Product Launch opinion</value>
-    <value code="distributor" industry="manufacturing" synonyms="dealer|channel partner|reseller|distribution|ordering">Distributor</value>
+    <value code="executive_insight" industry="insurance">Executive insight</value>
+    <value code="csat_services" industry="insurance">CSAT Services</value>
+    <value code="project_health" industry="insurance">Project health report</value>
+    <value code="csat" industry="insurance">CSAT</value>
+    <value code="product_platform" industry="insurance">Product or Platform</value>
+    <value code="product_prelaunch" industry="manufacturing">Product Prelaunch</value>
+    <value code="product_launch_opinion" industry="manufacturing">Product Launch opinion</value>
+    <value code="distributor" industry="manufacturing">Distributor</value>
   </facet>
 
   <facet code="audience" name="Audience">
-    <value code="cxo" description="CEO, CIO, CTO, COO and other executives" synonyms="CXO|C-level|executive|sponsor|leadership|CIO|CTO|CEO">CXO</value>
-    <value code="non_cxo" description="Managers, team leads and business users" synonyms="manager|team lead|business user|end user|operations|staff">Non-CXO</value>
+    <value code="cxo" description="CEO, CIO, CTO, COO and other executives">CXO</value>
+    <value code="non_cxo" description="Managers, team leads and business users">Non-CXO</value>
   </facet>
 
   <facet code="theme" name="Theme">
-    <value code="ai" synonyms="artificial intelligence|GenAI|generative AI|machine learning|ML|automation|copilot|chatbot|model">AI</value>
-    <value code="outsourcing" synonyms="managed services|vendor|supplier|offshore|service levels|SLA|delivery|partner|staffing">Outsourcing</value>
+    <value code="ai">AI</value>
+    <value code="outsourcing">Outsourcing</value>
   </facet>
 
   <facet code="dipstick" name="Dip Stick">

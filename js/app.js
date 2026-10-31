@@ -37,11 +37,10 @@
 
   function buildLookups(doc) {
     const root = doc.documentElement;
-    const syns = (el) => attr(el, 'synonyms').split('|').map((x) => x.trim()).filter(Boolean);
     const facets = {};
     kids(root, 'facet').forEach((f) => {
       facets[attr(f, 'code')] = kids(f, 'value').map((v) => ({
-        code: attr(v, 'code'), label: v.textContent.trim(), synonyms: syns(v),
+        code: attr(v, 'code'), label: v.textContent.trim(),
         industry: attr(v, 'industry'), description: attr(v, 'description'),
         questions: Number(attr(v, 'questions')) || 0, minutes: Number(attr(v, 'minutes')) || 0,
       }));
@@ -502,7 +501,7 @@
         <p class="sub" style="margin-top:${cf ? '18px' : '6px'}">Or search the question library. Questions already in the survey are hidden.</p>
         <div class="grid">
           <div class="field"><label class="label" for="v-search">Search</label>
-            <input type="search" id="v-search" data-act="v-search" value="${esc(V.search)}" placeholder="Keyword or synonym, e.g. SLA, GenAI, renewal"></div>
+            <input type="search" id="v-search" data-act="v-search" value="${esc(V.search)}" placeholder="Keyword, e.g. service levels, AI, renewal"></div>
           <div class="field"><label class="label" for="v-type">Question type</label>
             <select id="v-type" data-act="v-type">${optionList(QTYPES, V.type, 'All types')}</select></div>
         </div>
@@ -685,8 +684,8 @@
   // ======================================================================
   // QUESTION SEARCH (shared by the Question library and Add questions)
   // ======================================================================
-  // A search term is matched against the question text and the labels and synonyms of
-  // industries, goals, audiences, themes and Dip Stick values, so "GenAI" finds AI questions.
+  // A search term is matched against the question text and the names of industries,
+  // goals, audiences, themes and Dip Stick values, so "Distributor" also finds questions tagged with that goal.
   const FACET_NAMES = { industry: 'Industry', survey_goal: 'Goal', audience: 'Audience', theme: 'Theme', dipstick: 'Dip Stick' };
   const STOP = new Set(['a', 'an', 'the', 'and', 'or', 'of', 'to', 'in', 'on', 'for', 'is', 'are', 'how', 'we', 'our', 'you', 'your', 'with', 'by', 'it']);
   const norm = (str) => ` ${String(str).toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim()} `;
@@ -696,7 +695,7 @@
     if (!qn.trim()) return [];
     const out = [];
     Object.keys(FACET_NAMES).forEach((facet) => (LK.facets[facet] || []).forEach((v) => {
-      const terms = [{ t: norm(v.label), raw: '' }, ...v.synonyms.map((x) => ({ t: norm(x), raw: x }))];
+      const terms = [{ t: norm(v.label), raw: '' }];
       const hit = terms.find((term) => term.t.trim() && (qn.includes(term.t) || (!STOP.has(qn.trim()) && term.t.includes(qn))
         || (qn.trim().length >= 3 && term.t.trimStart().startsWith(qn.trim()))));
       if (hit) out.push({ facet, code: v.code, label: v.label, via: hit.raw });
@@ -721,7 +720,7 @@
       if (text.includes(qn)) { score += 6; reasons.push('Question text'); }
       else if (ws.length && ws.every((w) => text.includes(` ${w}`))) { score += 3; reasons.push('Question text'); }
       concepts.forEach((c) => {
-        if (tagged(q, c.facet, c.code)) { score += c.facet === 'survey_goal' ? 4 : 2; reasons.push(`${FACET_NAMES[c.facet]}: ${c.label}${c.via ? ` (synonym “${c.via}”)` : ''}`); }
+        if (tagged(q, c.facet, c.code)) { score += c.facet === 'survey_goal' ? 4 : 2; reasons.push(`${FACET_NAMES[c.facet]}: ${c.label}`); }
       });
       if (score > 0) results.push({ q, score, reasons });
     });
@@ -730,7 +729,7 @@
 
   function searchExplain(search) {
     const c = interpretSearch(search);
-    if (!c.length) return search.trim() ? '<p class="hint search-explain">No match in the reference lists; searching the question text only.</p>' : '';
+    if (!c.length) return search.trim() ? '<p class="hint search-explain">No industry, goal, audience, theme or Dip Stick has that name; searching the question text only.</p>' : '';
     return `<div class="search-explain"><span class="hint">“${esc(search.trim())}” also means:</span> ${c.slice(0, 8).map((e) => `<span class="tag soft-tag">${esc(FACET_NAMES[e.facet])}: ${esc(e.label)}</span>`).join('')}</div>`;
   }
   const reasonLine = (r) => (r.reasons.length ? `<span class="match-why">Matched on ${esc([...new Set(r.reasons)].join(' · '))}</span>` : '');
@@ -780,13 +779,13 @@
         <h2>Search and edit questions</h2>
         <div class="grid" style="margin-bottom:14px">
           <div class="field"><label class="label" for="q-search">Search</label>
-            <input type="search" id="q-search" data-act="q-search" value="${esc(Q.search)}" placeholder="Keyword or synonym, e.g. SLA, GenAI, claims, renewal"></div>
+            <input type="search" id="q-search" data-act="q-search" value="${esc(Q.search)}" placeholder="Keyword, e.g. service levels, AI, claims, renewal"></div>
           <div class="field"><label class="label" for="q-industry">Industry</label>
             <select id="q-industry" data-act="q-industry">${optionList(LK.facets.industry, Q.industry, 'All industries')}</select></div>
           <div class="field"><label class="label" for="q-status">Status</label>
             <select id="q-status" data-act="q-status">${optionList(Q_STATUS_FILTERS, Q.status)}</select></div>
         </div>
-        <p style="margin:-6px 0 12px"><span class="hint">Searches the question text plus the names and synonyms of industries, goals, CXO / non-CXO, themes and Dip Stick.</span></p>
+        <p style="margin:-6px 0 12px"><span class="hint">Searches the question text plus the names of industries, goals, CXO / non-CXO, themes and Dip Stick.</span></p>
         <div id="q-results"></div>
       </div>`;
     renderQuestionList();
@@ -1040,15 +1039,15 @@
   // ADMIN: industries with their goals, and themes (saved to lookups.xml)
   // ======================================================================
   const A = {
-    edit: null,        // { kind, code, label, synonyms } while a row is being edited
+    section: 'industries',   // side menu: 'industries' | 'themes'
+    edit: null,        // { kind, code, label } while a row is being edited
     confirm: null,     // { kind, code } while a removal is being confirmed
     goalDraft: {},     // industry code -> new goal name being typed
-    newIndustry: { name: '', goals: '', synonyms: '' },
-    newTheme: { name: '', synonyms: '' },
+    newIndustry: { name: '', goals: '' },
+    newTheme: { name: '' },
   };
   const KIND = { industry: 'industry', goal: 'survey_goal', theme: 'theme' };
   const KIND_LABEL = { industry: 'industry', goal: 'goal', theme: 'theme' };
-  const splitSyn = (text) => text.split(/[,|]/).map((x) => x.trim()).filter(Boolean);
 
   function usage(kind, code) {
     const qs = readQuestions(); const ss = readSurveys();
@@ -1066,12 +1065,8 @@
     const key = `${kind}-${v.code}`;
     if (A.edit && A.edit.kind === kind && A.edit.code === v.code) {
       return `<div class="ref-row editing ${extraClass}">
-        <div class="grid">
-          <div class="field"><label class="label" for="ae-label-${key}">Name</label>
-            <input type="text" id="ae-label-${key}" data-act="a-field" data-k="edit.label" value="${esc(A.edit.label)}" maxlength="60"></div>
-          <div class="field"><label class="label" for="ae-syn-${key}">Search synonyms</label>
-            <input type="text" id="ae-syn-${key}" data-act="a-field" data-k="edit.synonyms" value="${esc(A.edit.synonyms)}" placeholder="Comma separated"></div>
-        </div>
+        <div class="field"><label class="label" for="ae-label-${key}">Name</label>
+          <input type="text" id="ae-label-${key}" data-act="a-field" data-k="edit.label" value="${esc(A.edit.label)}" maxlength="60"></div>
         <div class="actions" style="margin-top:10px"><button type="button" class="btn small" data-act="a-cancel">Cancel</button>
           <button type="button" class="btn small primary" data-act="a-save">Save</button></div>
       </div>`;
@@ -1080,7 +1075,6 @@
     return `<div class="ref-row ${extraClass}">
       <div class="ref-main">
         <strong>${esc(v.label)}</strong>
-        <span class="hint">${v.synonyms.length ? `Synonyms: ${esc(v.synonyms.join(', '))}` : 'No synonyms'}</span>
         <span class="hint">${esc(usageText(u))}</span>
         ${confirming ? `<div class="note warn confirm-box" role="alert"><strong>Remove ${esc(v.label)}?</strong>${kind === 'industry' ? ' Its goals are removed too.' : ''}
           <div class="actions"><button type="button" class="btn small" data-act="a-remove-cancel">Keep it</button>
@@ -1093,63 +1087,71 @@
     </div>`;
   }
 
+  const SETTINGS_MENU = [
+    { code: 'industries', label: 'Industries and goals' },
+    { code: 'themes', label: 'Themes' },
+  ];
+
   function renderAdmin() {
     const el = $('#tab-admin');
     if (!el || !isAdmin()) return;
-    const inds = LK.facets.industry;
+    const section = A.section === 'themes' ? themesSection() : industriesSection();
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>Admin</h1><p>The industries, goals and themes offered on New survey and in the Question library. Codes stay the same when you rename, so existing questions and surveys keep working. Saved to <code>lookups.xml</code>.</p></div>
+        <div><h1>Settings</h1><p>The lists offered on New survey and in the Question library. Renaming keeps existing questions and surveys linked. Saved to <code>lookups.xml</code>.</p></div>
       </div>
-      <div class="cols">
-        <div class="col-main">
-          <div class="card">
-            <h2>Industries and goals</h2>
-            <p class="sub">Each industry has its own goals. After adding an industry, add questions for it in the Question library so New survey has something to recommend.</p>
-            <div class="ref-list">
-              ${inds.map((ind) => `
-                <div class="ind-block">
-                  ${valueRow('industry', ind, 'ind-head')}
-                  <div class="goal-list">
-                    <span class="label">Goals</span>
-                    ${goalsFor(ind.code).map((g) => valueRow('goal', g)).join('') || '<p class="hint">No goals yet.</p>'}
-                    <div class="inline-add">
-                      <input type="text" id="a-goal-${esc(ind.code)}" data-act="a-field" data-k="goal:${esc(ind.code)}" value="${esc(A.goalDraft[ind.code] || '')}" placeholder="New goal for ${esc(ind.label)}" aria-label="New goal for ${esc(ind.label)}" maxlength="60">
-                      <button type="button" class="btn" data-act="a-add-goal" data-ind="${esc(ind.code)}">Add goal</button>
-                    </div>
-                  </div>
-                </div>`).join('')}
-            </div>
-            <div class="custom-box" style="margin-top:18px">
-              <h3>Add an industry</h3>
-              <div class="grid" style="margin-top:10px">
-                <div class="field"><label class="label" for="a-ind-name">Industry name <span class="req">*</span></label>
-                  <input type="text" id="a-ind-name" data-act="a-field" data-k="newIndustry.name" value="${esc(A.newIndustry.name)}" placeholder="e.g. Retail" maxlength="60"></div>
-                <div class="field"><label class="label" for="a-ind-syn">Search synonyms</label>
-                  <input type="text" id="a-ind-syn" data-act="a-field" data-k="newIndustry.synonyms" value="${esc(A.newIndustry.synonyms)}" placeholder="e.g. stores, ecommerce"></div>
-              </div>
-              <div class="field"><label class="label" for="a-ind-goals">Goals <span class="req">*</span></label>
-                <textarea id="a-ind-goals" data-act="a-field" data-k="newIndustry.goals" rows="3" placeholder="One goal per line, e.g.&#10;Store experience&#10;Ecommerce platform">${esc(A.newIndustry.goals)}</textarea></div>
-              <div class="actions"><button type="button" class="btn primary" data-act="a-add-industry">Add industry</button></div>
-            </div>
-          </div>
-        </div>
-        <aside class="col-side static">
-          <div class="card">
-            <h2>Themes</h2>
-            <p class="sub">Offered as choices on New survey and when adding questions.</p>
-            <div class="ref-list">${LK.facets.theme.map((t) => valueRow('theme', t)).join('') || '<p class="hint">No themes yet.</p>'}</div>
-            <div class="custom-box" style="margin-top:16px">
-              <h3>Add a theme</h3>
-              <div class="field" style="margin-top:10px"><label class="label" for="a-theme-name">Theme name <span class="req">*</span></label>
-                <input type="text" id="a-theme-name" data-act="a-field" data-k="newTheme.name" value="${esc(A.newTheme.name)}" placeholder="e.g. Cloud" maxlength="60"></div>
-              <div class="field"><label class="label" for="a-theme-syn">Search synonyms</label>
-                <input type="text" id="a-theme-syn" data-act="a-field" data-k="newTheme.synonyms" value="${esc(A.newTheme.synonyms)}" placeholder="e.g. AWS, Azure, migration"></div>
-              <div class="actions"><button type="button" class="btn primary" data-act="a-add-theme">Add theme</button></div>
-            </div>
-          </div>
-        </aside>
+      <div class="settings">
+        <nav class="settings-menu" aria-label="Settings">
+          ${SETTINGS_MENU.map((m) => `<button type="button" class="settings-link" data-act="a-section" data-section="${m.code}"${A.section === m.code ? ' aria-current="page"' : ''}>${esc(m.label)}
+            <span class="count">${m.code === 'themes' ? LK.facets.theme.length : LK.facets.industry.length}</span></button>`).join('')}
+        </nav>
+        <div class="settings-body">${section}</div>
       </div>`;
+  }
+
+  function industriesSection() {
+    const inds = LK.facets.industry;
+    return `<div class="card">
+      <h2>Industries and goals</h2>
+      <p class="sub">Each industry has its own goals. After adding an industry, add questions for it in the Question library so New survey has something to recommend.</p>
+      <div class="ref-list">
+        ${inds.map((ind) => `
+          <div class="ind-block">
+            ${valueRow('industry', ind, 'ind-head')}
+            <div class="goal-list">
+              <span class="label">Goals</span>
+              ${goalsFor(ind.code).map((g) => valueRow('goal', g)).join('') || '<p class="hint">No goals yet.</p>'}
+              <div class="inline-add">
+                <input type="text" id="a-goal-${esc(ind.code)}" data-act="a-field" data-k="goal:${esc(ind.code)}" value="${esc(A.goalDraft[ind.code] || '')}" placeholder="New goal for ${esc(ind.label)}" aria-label="New goal for ${esc(ind.label)}" maxlength="60">
+                <button type="button" class="btn" data-act="a-add-goal" data-ind="${esc(ind.code)}">Add goal</button>
+              </div>
+            </div>
+          </div>`).join('') || '<p class="hint">No industries yet.</p>'}
+      </div>
+      <div class="custom-box" style="margin-top:18px">
+        <h3>Add an industry</h3>
+        <div class="field" style="margin-top:10px"><label class="label" for="a-ind-name">Industry name <span class="req">*</span></label>
+          <input type="text" id="a-ind-name" data-act="a-field" data-k="newIndustry.name" value="${esc(A.newIndustry.name)}" placeholder="e.g. Retail" maxlength="60"></div>
+        <div class="field"><label class="label" for="a-ind-goals">Goals <span class="req">*</span></label>
+          <textarea id="a-ind-goals" data-act="a-field" data-k="newIndustry.goals" rows="3" placeholder="One goal per line, e.g.&#10;Store experience&#10;Ecommerce platform">${esc(A.newIndustry.goals)}</textarea></div>
+        <div class="actions"><button type="button" class="btn primary" data-act="a-add-industry">Add industry</button></div>
+      </div>
+    </div>`;
+  }
+
+  function themesSection() {
+    return `<div class="card">
+      <h2>Themes</h2>
+      <p class="sub">Offered as choices on New survey and when adding questions.</p>
+      <div class="ref-list">${LK.facets.theme.map((t) => valueRow('theme', t)).join('') || '<p class="hint">No themes yet.</p>'}</div>
+      <div class="custom-box" style="margin-top:16px">
+        <h3>Add a theme</h3>
+        <div class="inline-add">
+          <input type="text" id="a-theme-name" data-act="a-field" data-k="newTheme.name" value="${esc(A.newTheme.name)}" placeholder="Theme name, e.g. Cloud" aria-label="Theme name" maxlength="60">
+          <button type="button" class="btn primary" data-act="a-add-theme">Add theme</button>
+        </div>
+      </div>
+    </div>`;
   }
 
   // A code made from the name, unique within the facet (codes never change after creation).
@@ -1174,13 +1176,12 @@
     }
   }
   const facetEl = (root, code) => kids(root, 'facet').find((f) => attr(f, 'code') === code);
-  function addValue(doc, root, facet, code, labelText, synonyms, extra = {}) {
+  function addValue(doc, root, facet, code, labelText, extra = {}) {
     const f = facetEl(root, facet);
     if (!f) throw new Error(`The ${facet} list is missing from lookups.xml.`);
     const v = doc.createElement('value');
     v.setAttribute('code', code);
     Object.entries(extra).forEach(([k, val]) => v.setAttribute(k, val));
-    if (synonyms.length) v.setAttribute('synonyms', synonyms.join('|'));
     v.textContent = labelText;
     f.appendChild(v);
   }
@@ -1193,17 +1194,17 @@
     if (!goals.length) { toast('Add at least one goal for the industry (one per line).', true); return; }
     const code = newCode('industry', name);
     const ok = await saveLookups((doc, root) => {
-      addValue(doc, root, 'industry', code, name, splitSyn(A.newIndustry.synonyms));
+      addValue(doc, root, 'industry', code, name);
       const used = new Set((LK.facets.survey_goal || []).map((v) => v.code));
       goals.forEach((g) => {
         let gc = g.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'goal';
         const base = gc; let n = 2;
         while (used.has(gc)) gc = `${base}_${n++}`;
         used.add(gc);
-        addValue(doc, root, 'survey_goal', gc, g, [], { industry: code });
+        addValue(doc, root, 'survey_goal', gc, g, { industry: code });
       });
     }, `${name} added with ${goals.length} goal${goals.length === 1 ? '' : 's'}.`);
-    if (ok) { A.newIndustry = { name: '', goals: '', synonyms: '' }; keepFocus(renderAdmin); }
+    if (ok) { A.newIndustry = { name: '', goals: '' }; keepFocus(renderAdmin); }
   }
 
   async function addGoal(industry) {
@@ -1211,7 +1212,7 @@
     if (!name) { toast('Type the goal name.', true); return; }
     if (goalsFor(industry).some((g) => g.label.toLowerCase() === name.toLowerCase())) { toast(`${label('industry', industry)} already has the goal ${name}.`, true); return; }
     const code = newCode('survey_goal', name);
-    const ok = await saveLookups((doc, root) => addValue(doc, root, 'survey_goal', code, name, [], { industry }),
+    const ok = await saveLookups((doc, root) => addValue(doc, root, 'survey_goal', code, name, { industry }),
       `${name} added to ${label('industry', industry)}.`);
     if (ok) { A.goalDraft[industry] = ''; keepFocus(renderAdmin); const el = $(`#a-goal-${industry}`); if (el) el.focus(); }
   }
@@ -1221,8 +1222,8 @@
     if (!name) { toast('Enter the theme name.', true); return; }
     if (LK.facets.theme.some((t) => t.label.toLowerCase() === name.toLowerCase())) { toast(`${name} is already a theme.`, true); return; }
     const code = newCode('theme', name);
-    const ok = await saveLookups((doc, root) => addValue(doc, root, 'theme', code, name, splitSyn(A.newTheme.synonyms)), `Theme ${name} added.`);
-    if (ok) { A.newTheme = { name: '', synonyms: '' }; keepFocus(renderAdmin); }
+    const ok = await saveLookups((doc, root) => addValue(doc, root, 'theme', code, name), `Theme ${name} added.`);
+    if (ok) { A.newTheme = { name: '' }; keepFocus(renderAdmin); const el = $('#a-theme-name'); if (el) el.focus(); }
   }
 
   async function saveEdit() {
@@ -1236,8 +1237,6 @@
       const v = kids(facetEl(root, facet), 'value').find((x) => attr(x, 'code') === e.code);
       if (!v) throw new Error('This item was removed by someone else.');
       v.textContent = name;
-      const syn = splitSyn(e.synonyms);
-      if (syn.length) v.setAttribute('synonyms', syn.join('|')); else v.removeAttribute('synonyms');
     }, `${name} saved.`);
     if (ok) { A.edit = null; keepFocus(renderAdmin); }
   }
@@ -1281,12 +1280,13 @@
     switch (b.dataset.act) {
       case 'a-edit': {
         const v = fv(KIND[b.dataset.kind], b.dataset.code);
-        A.edit = { kind: b.dataset.kind, code: b.dataset.code, label: v.label, synonyms: v.synonyms.join(', ') };
+        A.edit = { kind: b.dataset.kind, code: b.dataset.code, label: v.label };
         A.confirm = null;
         renderAdmin();
         const el = $(`#ae-label-${b.dataset.kind}-${b.dataset.code}`); if (el) el.focus();
         return;
       }
+      case 'a-section': A.section = b.dataset.section; A.edit = null; A.confirm = null; renderAdmin(); return;
       case 'a-cancel': A.edit = null; renderAdmin(); return;
       case 'a-save': saveEdit(); return;
       case 'a-ask-remove': A.confirm = { kind: b.dataset.kind, code: b.dataset.code }; A.edit = null; renderAdmin(); return;
@@ -1309,7 +1309,7 @@
       { code: 'surveys', label: 'surveys.xml', where: where('surveys') },
       { code: 'questions', label: 'questions.xml', where: where('questions') },
       { code: 'customers', label: 'customers.xml', where: where('customers') },
-      { code: 'lookups', label: 'lookups.xml', where: `${where('lookups')} (edited on the Admin screen)` },
+      { code: 'lookups', label: 'lookups.xml', where: `${where('lookups')} (edited in Settings)` },
     ];
     const file = files.find((x) => x.code === D.file) || files[0];
     const xml = Store.serialize(Store.doc(file.code));
