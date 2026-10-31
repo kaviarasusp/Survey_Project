@@ -90,7 +90,7 @@
       questions: kids(s, 'question')
         .sort((a, b) => Number(attr(a, 'position')) - Number(attr(b, 'position')))
         .map((q) => ({
-          ref: attr(q, 'ref'), custom: attr(q, 'custom') === 'true',
+          ref: attr(q, 'ref'), custom: attr(q, 'custom') === 'true', theme: attr(q, 'theme'),
           type: attr(q, 'type'), scale: attr(q, 'scale'),
           text: (kids(q, 'text')[0] || { textContent: '' }).textContent.trim(),
           options: kids(q, 'option').map((o) => o.textContent.trim()),
@@ -105,7 +105,11 @@
   // Admin sees every tab and every survey; a customer creates and edits its own surveys.
   const allowedTabs = () => (isAdmin() ? ['survey', 'surveys', 'questions', 'admin', 'data'] : ['survey', 'surveys']);
 
-  const newSurveyForm = () => ({ title: '', industry: '', goal: '', audience: '', themes: [], dipstick: 'standard', count: dipstickDefault('standard'), errors: [] });
+  const THEME_EXTRA = 5;      // theme questions added on top of the core set, shared across the chosen themes
+  const CORE_MIN = 10;        // a survey always has at least this many core questions
+  // Default split of the theme questions: 1 theme = 5; 2 themes = 3 + 2; 3 themes = 2 + 2 + 1 …
+  const splitThemes = (themes) => Object.fromEntries(themes.map((t, i) => [t, Math.floor(THEME_EXTRA / themes.length) + (i < THEME_EXTRA % themes.length ? 1 : 0)]));
+  const newSurveyForm = () => ({ title: '', industry: '', goal: '', audience: '', themes: [], dipstick: 'standard', core: dipstickDefault('standard'), themeCounts: {}, errors: [] });
   let N = null;                                                                         // New survey form
   const V = { selected: '', draft: null, search: '', type: '', fitOnly: true, clientName: '', custom: null };  // Surveys tab
   const Q = { search: '', industry: '', status: 'active', showForm: false, form: null, confirm: null };       // Question library
@@ -160,53 +164,85 @@
     (placeholder !== undefined ? `<option value="">${esc(placeholder)}</option>` : '')
     + list.map((v) => `<option value="${esc(v.code)}"${v.code === selected ? ' selected' : ''}>${esc(v.label)}</option>`).join('');
 
-  // Does a library question fit the survey criteria?
-  function fits(q, c) {
+  // Does a library question match the survey's industry, goal, audience and Dip Stick?
+  function fitsBase(q, c) {
     return q.status === 'published'
       && q.industry === c.industry
       && (!q.goal || q.goal === c.goal)
       && (!c.audience || q.audience.includes(c.audience))
-      && q.themes.some((t) => c.themes.includes(t))
       && (c.dipstick === 'in_depth' || q.dipstick === 'standard');
   }
+  // Core questions (no theme) always fit; theme questions fit when their theme is chosen.
+  const fits = (q, c) => fitsBase(q, c) && (!q.themes.length || q.themes.some((t) => c.themes.includes(t)));
 
-  // Recommended questions for the criteria: NPS first, the best-scoring questions next, one open question last.
-  function recommend(c, count) {
-    const pool = readQuestions().filter((q) => fits(q, c));
-    const score = (q) => (q.goal ? 3 : 0) + (q.dipstick === 'standard' ? 2 : 0)
-      + (q.audience.length === 1 ? 1 : 0) + (q.themes.every((t) => c.themes.includes(t)) ? 1 : 0);
-    const nps = pool.filter((q) => q.type === 'nps');
-    const open = pool.filter((q) => q.type === 'open_text').sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id));
-    const rest = pool.filter((q) => q.type !== 'nps' && q.type !== 'open_text').sort((a, b) => score(b) - score(a) || a.id.localeCompare(b.id));
-    const n = Math.max(0, count);
-    const out = [];
-    if (nps.length && n > 0) out.push(nps[0]);
-    const keepOpen = open.length && n - out.length >= 3 ? 1 : 0;
-    out.push(...rest.slice(0, n - out.length - keepOpen));
-    if (keepOpen) out.push(open[0]);
-    if (out.length < n) {
-      const extra = [...open.slice(keepOpen), ...nps.slice(1)].slice(0, n - out.length);
-      out.splice(out.length - keepOpen, 0, ...extra);
-    }
-    return { pool, picked: out };
+  // Recommended questions: the core set (NPS first, one open question last) plus questions for each chosen theme.
+  function recommend(c) {
+    const base = readQuestions().filter((q) => fitsBase(q, c));
+    const score = (q) => (q.goal ? 3 : 0) + (q.dipstick === 'standard' ? 2 : 0) + (q.audience.length === 1 ? 1 : 0);
+    const byScore = (a, b) => score(b) - score(a) || a.id.localeCompare(b.id);
+
+    const corePool = base.filter((q) => !q.themes.length);
+    const nps = corePool.filter((q) => q.type === 'nps');
+    const open = corePool.filter((q) => q.type === 'open_text').sort(byScore);
+    const rest = corePool.filter((q) => q.type !== 'nps' && q.type !== 'open_text').sort(byScore);
+    const n = c.core;
+    const core = [];
+    if (nps.length) core.push(nps[0]);
+    const keepOpen = open.length && n - core.length >= 3 ? 1 : 0;
+    core.push(...rest.slice(0, n - core.length - keepOpen));
+    if (core.length < n - keepOpen) core.push(...open.slice(keepOpen, keepOpen + (n - keepOpen - core.length)));
+    const closing = keepOpen ? open[0] : null;
+
+    const used = new Set([...core, closing].filter(Boolean).map((q) => q.id));
+    const themes = c.themes.map((t) => {
+      const pool = base.filter((q) => q.themes.includes(t) && !used.has(q.id)).sort(byScore);
+      const want = c.themeCounts[t] ?? 0;
+      const picked = pool.slice(0, want);
+      picked.forEach((q) => used.add(q.id));
+      return { code: t, want, pool, picked };
+    });
+
+    const ordered = [
+      ...core.map((q) => ({ q, theme: '' })),
+      ...themes.flatMap((t) => t.picked.map((q) => ({ q, theme: t.code }))),
+      ...(closing ? [{ q: closing, theme: '' }] : []),
+    ];
+    return { coreWant: n, corePool, core: closing ? [...core, closing] : core, themes, ordered };
   }
 
   // ======================================================================
   // NEW SURVEY
   // ======================================================================
+  const stepper = (key, value, min, max, labelText) => `
+    <div class="stepper">
+      <button type="button" class="icon-btn step" data-act="cnt-down" data-key="${key}" aria-label="One fewer ${esc(labelText)} question"${value <= min ? ' disabled' : ''}>−</button>
+      <input type="number" id="ns-count-${key.replace(':', '-')}" data-act="cnt" data-key="${key}" min="${min}" max="${max}" value="${value}" inputmode="numeric" aria-label="Number of ${esc(labelText)} questions">
+      <button type="button" class="icon-btn step" data-act="cnt-up" data-key="${key}" aria-label="One more ${esc(labelText)} question"${value >= max ? ' disabled' : ''}>+</button>
+    </div>`;
+  const countLimits = (key) => (key === 'core' ? [CORE_MIN, 40] : [0, 15]);
+  const getCount = (f, key) => (key === 'core' ? f.core : f.themeCounts[key.slice(6)] ?? 0);
+  function setCount(f, key, v) {
+    const [min, max] = countLimits(key);
+    const n = Math.min(max, Math.max(min, Math.round(v)));
+    if (key === 'core') f.core = n; else f.themeCounts[key.slice(6)] = n;
+  }
+
   function renderSurvey() {
     const el = $('#tab-survey');
     const customer = currentCustomer();
     const f = N;
     const goals = f.industry ? goalsFor(f.industry) : [];
-    const ready = f.industry && f.goal && f.audience && f.themes.length;
-    const rec = ready ? recommend(f, f.count) : { pool: [], picked: [] };
-    const short = ready && rec.picked.length < f.count;
+    const ready = f.industry && f.goal && f.audience;
+    const rec = ready ? recommend(f) : null;
     const dip = fv('dipstick', f.dipstick);
+    // Number each question by its position in the survey (the closing open question comes last).
+    const pos = new Map(rec ? rec.ordered.map((x, i) => [x.q.id, i + 1]) : []);
+    const qList = (items) => items.map((q) => `<div class="qitem"><span class="n">${pos.get(q.id)}</span><span>${fillTokens(q.text, customer)}<span class="meta">${esc(formatLine(q))}${q.type === 'open_text' && pos.get(q.id) === pos.size ? ' · asked last' : ''}</span></span><span></span></div>`).join('');
+    const themeTotal = f.themes.reduce((n, t) => n + (f.themeCounts[t] ?? 0), 0);
 
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>New survey</h1><p>Name the survey and choose who it is for. Questions are picked from the library to match; you can edit them after you create the survey and tag clients later.</p></div>
+        <div><h1>New survey</h1><p>Name the survey and choose who it is for. You get ${CORE_MIN} or more core questions, plus extra questions for each theme you pick. You can edit them after you create the survey and tag clients later.</p></div>
       </div>
       <div class="cols">
         <div class="col-main">
@@ -232,9 +268,9 @@
               ${f.audience ? `<span class="hint">${esc((fv('audience', f.audience) || {}).description)}</span>` : ''}
             </div>
             <div class="field">
-              <span class="label">Themes <span class="req">*</span></span>
+              <span class="label">Themes</span>
               <div class="chips">${LK.facets.theme.map((t) => chip(`ns-theme-${t.code}`, 'theme', t.code, f.themes.includes(t.code), t.label)).join('')}</div>
-              <span class="hint">Pick one or both.</span>
+              <span class="hint">Optional. Themes add ${THEME_EXTRA} questions in total, shared between the themes you pick (one theme: ${THEME_EXTRA}; two themes: ${Math.ceil(THEME_EXTRA / 2)} + ${Math.floor(THEME_EXTRA / 2)}). Change the split in the right pane.</span>
             </div>
             <div class="field">
               <span class="label" id="ns-dip-label">Dip Stick</span>
@@ -242,7 +278,7 @@
                 ${LK.facets.dipstick.map((d) => `
                   <label class="pick" for="ns-dip-${d.code}">
                     <input type="radio" name="ns-dipstick" id="ns-dip-${d.code}" data-act="dipstick" value="${d.code}"${f.dipstick === d.code ? ' checked' : ''}>
-                    <strong>${esc(d.label)}</strong><span>${esc(d.description)} · about ${d.questions} questions, ~${d.minutes} min</span>
+                    <strong>${esc(d.label)}</strong><span>${esc(d.description)} · ${d.questions} core questions</span>
                   </label>`).join('')}
               </div>
             </div>
@@ -252,28 +288,29 @@
         <aside class="col-side" aria-labelledby="rec-title">
           <div class="card">
             <h2 id="rec-title">Recommended survey</h2>
-            <div class="count-row">
-              <label class="label" for="ns-count">Number of questions</label>
-              <div class="stepper">
-                <button type="button" class="icon-btn step" data-act="count-down" aria-label="One question fewer"${f.count <= 1 ? ' disabled' : ''}>−</button>
-                <input type="number" id="ns-count" data-act="count" min="1" max="40" value="${f.count}" inputmode="numeric">
-                <button type="button" class="icon-btn step" data-act="count-up" aria-label="One question more"${f.count >= 40 ? ' disabled' : ''}>+</button>
+            ${rec ? `
+              <div class="stats">
+                <div class="stat"><b>${rec.ordered.length}</b><span>questions</span></div>
+                <div class="stat"><b>~${minutes(rec.ordered.map((x) => x.q))}</b><span>minutes</span></div>
               </div>
-              <span class="hint">${esc(dip ? dip.label : '')} Dip Stick suggests ${dipstickDefault(f.dipstick)}. Change it as you need.</span>
-            </div>
-            ${ready ? `
-              <div class="stats" style="margin-top:14px">
-                <div class="stat"><b>${rec.picked.length}</b><span>questions</span></div>
-                <div class="stat"><b>~${minutes(rec.picked)}</b><span>minutes</span></div>
-                <div class="stat"><b>${rec.pool.length}</b><span>match</span></div>
-              </div>
-              ${short ? `<p class="note warn" style="margin-top:12px">Only ${rec.pool.length} library questions match these choices. You can add more questions after you create the survey.</p>` : ''}
-              <p class="note" style="margin-top:12px">${esc(label('industry', f.industry))} · ${esc(label('survey_goal', f.goal))} · ${esc(label('audience', f.audience))} · ${esc(f.themes.map((t) => label('theme', t)).join(' + '))} · ${esc(dip.label)}</p>
-              <h3 style="margin:16px 0 8px">Questions</h3>
-              <div class="qlist">
-                ${rec.picked.map((q, i) => `<div class="qitem"><span class="n">${i + 1}</span><span>${fillTokens(q.text, customer)}<span class="meta">${esc(formatLine(q))}</span></span><span></span></div>`).join('') || '<p class="hint">No questions match. Try another theme or the In-depth Dip Stick.</p>'}
-              </div>`
-            : `<p class="hint" style="margin-top:14px">Choose an industry, goal, audience and at least one theme to see the recommended questions.</p>`}
+              <p class="note" style="margin-top:12px">${f.core} core${f.themes.length ? ` + ${themeTotal} theme` : ''} = <strong>${f.core + themeTotal} questions</strong> · ${esc(label('industry', f.industry))} · ${esc(label('survey_goal', f.goal))} · ${esc(label('audience', f.audience))} · ${esc(dip.label)}</p>
+
+              <section class="rec-section" aria-labelledby="rec-core">
+                <div class="rec-head"><div><h3 id="rec-core">Core questions</h3><span class="hint">Minimum ${CORE_MIN}. ${esc(dip.label)} suggests ${dipstickDefault(f.dipstick)}.</span></div>
+                  ${stepper('core', f.core, CORE_MIN, 40, 'core')}</div>
+                ${rec.core.length < f.core ? `<p class="note warn">Only ${rec.core.length} core questions match. Add more after you create the survey.</p>` : ''}
+                <div class="qlist">${qList(rec.core)}</div>
+              </section>
+
+              ${rec.themes.map((t) => `
+                <section class="rec-section theme-section" aria-labelledby="rec-theme-${esc(t.code)}">
+                  <div class="rec-head"><div><h3 id="rec-theme-${esc(t.code)}">Theme: ${esc(label('theme', t.code))}</h3><span class="hint">${t.pool.length} available</span></div>
+                    ${stepper(`theme:${t.code}`, t.want, 0, 15, label('theme', t.code))}</div>
+                  ${t.picked.length < t.want ? `<p class="note warn">Only ${t.picked.length} ${esc(label('theme', t.code))} questions match.</p>` : ''}
+                  <div class="qlist">${qList(t.picked) || '<p class="hint">No questions for this theme.</p>'}</div>
+                </section>`).join('')}
+              ${f.themes.length ? '' : `<p class="hint" style="margin-top:14px">Pick a theme to add ${THEME_EXTRA} theme questions.</p>`}`
+            : `<p class="hint">Choose an industry, goal and audience to see the recommended questions.</p>`}
             <div class="actions">
               <button type="button" class="btn" data-act="reset">Clear</button>
               <button type="button" class="btn primary" id="ns-create" data-act="create">Create survey</button>
@@ -291,11 +328,10 @@
     if (!f.industry) errs.push('Industry');
     if (!f.goal) errs.push('Goal');
     if (!f.audience) errs.push('CXO or non-CXO');
-    if (!f.themes.length) errs.push('At least one theme');
     f.errors = errs;
     if (errs.length) { keepFocus(renderSurvey); $('#new-survey-card').scrollIntoView({ block: 'start' }); return; }
-    const rec = recommend(f, f.count);
-    if (!rec.picked.length) { toast('No library questions match. Try another theme or the In-depth Dip Stick.', true); return; }
+    const rec = recommend(f);
+    if (!rec.ordered.length) { toast('No library questions match. Add questions for this industry and goal in the Question library.', true); return; }
     const btn = $('#ns-create'); if (btn) btn.disabled = true;
     const id = Store.newId('srv');
     const owner = customer ? customer.id : '';   // Admin surveys belong to A4U
@@ -306,8 +342,13 @@
         set('id', id); set('title', f.title.trim()); set('customer', owner);
         set('industry', f.industry); set('goal', f.goal); set('audience', f.audience); set('dipstick', f.dipstick);
         set('status', 'draft'); set('createdAt', todayIso());
-        f.themes.forEach((t) => { const n = doc.createElement('theme'); n.setAttribute('code', t); s.appendChild(n); });
-        rec.picked.forEach((q, i) => { const n = doc.createElement('question'); n.setAttribute('ref', q.id); n.setAttribute('position', String(i + 1)); s.appendChild(n); });
+        f.themes.forEach((t) => { const n = doc.createElement('theme'); n.setAttribute('code', t); n.setAttribute('questions', String(f.themeCounts[t] ?? 0)); s.appendChild(n); });
+        rec.ordered.forEach(({ q, theme }, i) => {
+          const n = doc.createElement('question');
+          n.setAttribute('ref', q.id); n.setAttribute('position', String(i + 1));
+          if (theme) n.setAttribute('theme', theme);
+          s.appendChild(n);
+        });
         doc.documentElement.appendChild(s);
       });
       N = newSurveyForm();
@@ -328,15 +369,16 @@
     const f = N;
     if (ev.type === 'input') {
       if (act === 'title') f.title = t.value;
-      if (act === 'count') {
+      if (act === 'cnt') {
         const v = Math.round(Number(t.value));
-        if (v >= 1 && v <= 40) { f.count = v; keepFocus(renderSurvey); }
+        const [min, max] = countLimits(t.dataset.key);
+        if (t.value !== '' && v >= min && v <= max) { setCount(f, t.dataset.key, v); keepFocus(renderSurvey); }
       }
       return;
     }
     if (ev.type === 'click') {
-      if (act === 'count-down') f.count = Math.max(1, f.count - 1);
-      else if (act === 'count-up') f.count = Math.min(40, f.count + 1);
+      if (act === 'cnt-down') setCount(f, t.dataset.key, getCount(f, t.dataset.key) - 1);
+      else if (act === 'cnt-up') setCount(f, t.dataset.key, getCount(f, t.dataset.key) + 1);
       else if (act === 'reset') N = newSurveyForm();
       else if (act === 'create') { createSurvey(); return; }
       else return;
@@ -348,9 +390,12 @@
       case 'industry': f.industry = t.value; if (!goalsFor(f.industry).some((g) => g.code === f.goal)) f.goal = ''; break;
       case 'goal': f.goal = t.value; break;
       case 'audience': f.audience = t.value; break;
-      case 'theme': f.themes = t.checked ? [...new Set([...f.themes, t.value])] : f.themes.filter((x) => x !== t.value); break;
-      case 'dipstick': f.dipstick = t.value; f.count = dipstickDefault(t.value); break;
-      case 'count': { const v = Math.min(40, Math.max(1, Math.round(Number(t.value)) || 1)); f.count = v; break; }
+      case 'theme':
+        f.themes = t.checked ? [...new Set([...f.themes, t.value])] : f.themes.filter((x) => x !== t.value);
+        f.themeCounts = splitThemes(f.themes);   // re-share the theme questions across the chosen themes
+        break;
+      case 'dipstick': f.dipstick = t.value; f.core = Math.max(CORE_MIN, dipstickDefault(t.value)); break;
+      case 'cnt': setCount(f, t.dataset.key, Number(t.value) || 0); break;
       default: return;
     }
     if (f.errors.length) f.errors = [];
@@ -427,7 +472,7 @@
           <span class="tag theme">${esc(label('industry', sv.industry))}</span>
           <span class="tag">${esc(label('survey_goal', sv.goal))}</span>
           <span class="tag">${esc(label('audience', sv.audience))}</span>
-          ${sv.themes.map((t) => `<span class="tag">${esc(label('theme', t))}</span>`).join('')}
+          ${sv.themes.map((t) => `<span class="tag">Theme: ${esc(label('theme', t))}</span>`).join('') || '<span class="tag">No themes</span>'}
           <span class="tag">Dip Stick: ${esc(label('dipstick', sv.dipstick))}</span>
           <span class="badge grey">${esc(sv.status)}</span>
         </div>
@@ -461,7 +506,7 @@
                 ${q.missing ? `<p class="hint"><em>This question is no longer in the library.</em></p>` : `
                 <label class="sr-only" for="vq-${i}">Question ${i + 1} wording</label>
                 <textarea id="vq-${i}" data-act="v-qtext" data-i="${i}" rows="2" maxlength="200">${esc(q.text)}</textarea>`}
-                <span class="meta">${esc(formatLine(q))}${q.custom ? ' · written for this survey' : ''}${q.retired ? ' · retired in the library' : ''}${!q.custom && q.libText && q.text !== q.libText ? ` · <button type="button" class="btn link inline" data-act="v-qreset" data-i="${i}">Use library wording</button>` : ''}</span>
+                <span class="meta"><span class="sect-tag${q.theme ? ' is-theme' : ''}">${q.theme ? `Theme: ${esc(label('theme', q.theme))}` : 'Core'}</span> ${esc(formatLine(q))}${q.custom ? ' · written for this survey' : ''}${q.retired ? ' · retired in the library' : ''}${!q.custom && q.libText && q.text !== q.libText ? ` · <button type="button" class="btn link inline" data-act="v-qreset" data-i="${i}">Use library wording</button>` : ''}</span>
               </div>
               <span class="q-tools">
                 <button type="button" class="icon-btn" id="v-up-${i}" data-act="v-up" data-i="${i}" aria-label="Move question ${i + 1} up"${i === 0 ? ' disabled' : ''}>↑</button>
@@ -506,7 +551,7 @@
             <select id="v-type" data-act="v-type">${optionList(QTYPES, V.type, 'All types')}</select></div>
         </div>
         <div class="chips" style="margin-top:10px">${chip('v-fit', 'v-fit', 'fit', V.fitOnly, 'Only questions that fit this survey')}</div>
-        <span class="hint">Fits = same industry and goal, suitable for ${esc(label('audience', sv.audience))}, and about ${esc(sv.themes.map((t) => label('theme', t)).join(' or '))}.</span>
+        <span class="hint">Fits = same industry and goal, suitable for ${esc(label('audience', sv.audience))}; core questions${sv.themes.length ? ` and questions about ${esc(sv.themes.map((t) => label('theme', t)).join(' or '))}` : ''}.</span>
         <div id="v-add-results" style="margin-top:14px"></div>
       </div>`;
   }
@@ -555,6 +600,7 @@
         d.questions.forEach((q, i) => {
           const n = doc.createElement('question');
           n.setAttribute('position', String(i + 1));
+          if (q.theme) n.setAttribute('theme', q.theme);
           const addText = (text) => { const t = doc.createElement('text'); t.textContent = text; n.appendChild(t); };
           if (q.custom) {
             n.setAttribute('custom', 'true'); n.setAttribute('type', q.type);
@@ -594,7 +640,7 @@
     const c = V.custom;
     const text = c.text.trim();
     if (text.length < 5) { toast('Write the question (at least 5 characters).', true); return; }
-    V.draft.questions.push({ ref: '', custom: true, type: c.type, scale: c.type === 'rating' ? c.scale : '', text, options: [] });
+    V.draft.questions.push({ ref: '', custom: true, theme: '', type: c.type, scale: c.type === 'rating' ? c.scale : '', text, options: [] });
     V.custom = null;
     toast('Question added. Save changes to keep it.');
     keepFocus(renderSurveys);
@@ -663,7 +709,9 @@
         const lib = qmap();
         const last = d.questions[d.questions.length - 1];
         const lastQ = last && (last.custom ? last : lib.get(last.ref));
-        const item = { ref: b.dataset.id, custom: false, type: '', scale: '', text: '', options: [] };
+        const libQ = lib.get(b.dataset.id);
+        const theme = libQ ? (libQ.themes.find((t) => sv.themes.includes(t)) || '') : '';
+        const item = { ref: b.dataset.id, custom: false, theme, type: '', scale: '', text: '', options: [] };
         // Keep an open-ended question at the end.
         if (lastQ && lastQ.type === 'open_text') d.questions.splice(d.questions.length - 1, 0, item); else d.questions.push(item);
         toast('Question added. Save changes to keep it.');
@@ -739,7 +787,7 @@
       `<span class="tag theme">${esc(label('industry', q.industry))} · ${esc(q.goal ? label('survey_goal', q.goal) : 'All goals')}</span>`,
       `<span class="tag">${esc(formatLine(q))}</span>`,
       `<span class="tag">${esc(q.audience.map((a) => label('audience', a)).join(' + '))}</span>`,
-      `<span class="tag">${esc(q.themes.map((t) => label('theme', t)).join(' + '))}</span>`,
+      `<span class="tag">${q.themes.length ? `Theme: ${esc(q.themes.map((t) => label('theme', t)).join(' + '))}` : 'Core'}</span>`,
       `<span class="tag">${esc(label('dipstick', q.dipstick))}</span>`,
     ].join('');
   }
@@ -906,8 +954,9 @@
           <div class="field"><span class="label">Is this for CXO or non-CXO? <span class="req">*</span></span>
             <div class="chips">${LK.facets.audience.map((a) => chip(`qf-aud-${a.code}`, 'qf-multi', a.code, f.audience.includes(a.code), a.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="audience"')).join('')}</div>
             <span class="hint">Pick both if it suits either audience.</span></div>
-          <div class="field"><span class="label">Themes <span class="req">*</span></span>
-            <div class="chips">${LK.facets.theme.map((t) => chip(`qf-theme-${t.code}`, 'qf-multi', t.code, f.themes.includes(t.code), t.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="themes"')).join('')}</div></div>
+          <div class="field"><span class="label">Theme</span>
+            <div class="chips">${LK.facets.theme.map((t) => chip(`qf-theme-${t.code}`, 'qf-multi', t.code, f.themes.includes(t.code), t.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="themes"')).join('')}</div>
+            <span class="hint">Leave empty for a <strong>core</strong> question (used in every matching survey). Pick a theme for a question that is added only when that theme is chosen.</span></div>
           <div class="field"><span class="label" id="qf-dip-label">Dip Stick</span>
             <div class="cards-pick" role="radiogroup" aria-labelledby="qf-dip-label">
               ${LK.facets.dipstick.map((d) => `<label class="pick" for="qf-dip-${d.code}">
@@ -948,7 +997,6 @@
     if (/\[(?!PROVIDER\])[A-Z]+\]/.test(f.text)) errs.push('Only the [PROVIDER] token is supported.');
     if (!f.industry) errs.push('Choose an industry.');
     if (!f.audience.length) errs.push('Choose CXO, non-CXO or both.');
-    if (!f.themes.length) errs.push('Choose at least one theme.');
     if (f.type === 'nps' && readQuestions().some((q) => q.id !== f.editId && q.type === 'nps' && q.status === 'published' && q.industry === f.industry)) {
       errs.push(`${label('industry', f.industry)} already has a published NPS question. NPS wording is standard, so reuse that one.`);
     }

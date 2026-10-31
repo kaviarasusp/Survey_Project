@@ -9,7 +9,7 @@ A working demo of the A4U survey builder. It's plain HTML and JavaScript with no
 
 | Screen | Who | What it does |
 |---|---|---|
-| **New survey** | All | Five choices: **Survey title**, **Industry** (Insurance, Manufacturing), **Goal** (depends on the industry), **CXO or non-CXO**, **Themes** (AI, Outsourcing), plus **Dip Stick** (Standard or In-depth). The right pane shows the recommended survey; the **number of questions** is editable. **Create survey** picks the questions and opens the survey for editing. |
+| **New survey** | All | **Survey title**, **Industry**, **Goal** (depends on the industry), **CXO or non-CXO**, optional **Themes**, and **Dip Stick** (Standard or In-depth). The right pane shows the recommended survey in sections: **Core questions** (at least 10) and one section per chosen theme, each with an editable count. **Create survey** picks the questions and opens the survey for editing. |
 | **Surveys** | All | Every survey for the customer. Open one to edit the title, **tag clients** (one of the customer's clients or a new name), edit each question's wording for this survey, reorder or remove questions, add questions from the library (search with a "fits this survey" filter) or **write a new question** for this survey. **Save changes** writes to `surveys.xml`. |
 | **Question library** | Admin | Add a question: **Question text**, **Question type** (Open ended, Rating scale, Yes / No, NPS), **Scale** (5-point or 7-point for rating questions; NPS is always 0–10), and where it is used: Industry, Goal, CXO / non-CXO, Themes and Dip Stick. **Search and edit** below: edit, retire, reactivate, or delete a question that no survey uses. Saved to `questions.xml`. |
 | **Settings** | Admin | Side menu with **Industries and goals** (add an industry with its goals, add goals to an industry) and **Themes** (add a theme). Rename any item; remove items that no question or survey uses. Saved to `lookups.xml`. |
@@ -23,7 +23,13 @@ Goals by industry in the sample data (change them in **Settings**):
 
 ## How questions are picked
 
-A library question is offered for a survey when it has the same **industry**, its **goal** is the survey's goal (or "all goals" for that industry), it is tagged for the chosen **CXO / non-CXO** audience, and it covers at least one chosen **theme**. **Standard** surveys use Standard questions; **In-depth** surveys use Standard and In-depth questions. Standard suggests 10 questions and In-depth 18; the number can be changed. The NPS question comes first and one open question last. If fewer questions match than requested, the right pane says so and you can add or write more after creating the survey.
+Every survey has a **core set of at least 10 questions** (15 for In-depth), chosen by industry, goal (or "all goals" for that industry), CXO / non-CXO and Dip Stick. Core questions have no theme. The NPS question comes first and one open question last.
+
+Each chosen **theme adds 5 questions in total**, shared between the themes: one theme adds 5; two themes add 3 + 2. So a Standard survey with themes has 15 questions. The core count (minimum 10) and each theme's count can be changed in the right pane; after creating the survey, every question can still be reworded, removed or replaced, and each one shows whether it is **Core** or from a **theme**.
+
+**Standard** surveys use Standard questions; **In-depth** surveys use Standard and In-depth questions. If fewer questions match than requested, the pane says so and you can add or write more after creating the survey.
+
+In the **Question library**, leave **Theme** empty for a core question, or pick a theme for a question that is added only when that theme is chosen.
 
 ## How search works
 
@@ -34,7 +40,7 @@ The search box on **Surveys → Add questions** and in the **Question library** 
 ```
 data/lookups.xml     reference lists (industries, goals, audiences, themes, Dip Stick, scales); edited in Settings
 data/customers.xml   seed data: customers and their clients (offered when tagging a survey)
-data/questions.xml   seed data: question library (96 sample questions: rating, open ended, yes / no, NPS)
+data/questions.xml   seed data: question library (128 sample questions: core and theme questions; rating, open ended, yes / no, NPS)
 data/surveys.xml     seed data: empty
 api/xml.js           Vercel Function that reads/writes the three editable files
 js/seed-data.js      built-in copy of data/*.xml, used only when index.html is opened from disk
@@ -79,7 +85,7 @@ If you edit any file in `data/`, run `node tools/build-seed.mjs` so the built-in
 ## Suggested demo for your leader
 
 1. Signed in as **Admin (A4U)**. **New survey**: type a title, pick **Insurance**, and show that **Goal** lists the five Insurance goals; switch to **Manufacturing** to show its three.
-2. Pick Insurance → **Executive insight**, **CXO**, theme **AI**. The right pane shows 10 recommended questions. Change the number to 8, then switch Dip Stick to **In-depth** (the number moves to 18 and the pane says how many match).
+2. Pick Insurance → **Executive insight**, **CXO**. The right pane shows 10 core questions. Tick theme **AI**: 5 AI questions are added (15 in total). Tick **Outsourcing** too: the 5 are shared as 3 + 2. Change a theme's count with + / −, then try Dip Stick **In-depth** (15 core questions).
 3. **Create survey**. The survey opens on **Surveys**: reword a question, move one up, remove one, search "AI" and add a question, and **Write a new question**.
 4. **Tag clients**: pick Harbor Mutual Insurance from the list and type a new client name. **Save changes**.
 5. **Question library**: add a question for Manufacturing → Distributor, Non-CXO, AI, In-depth. Search "Distributor" to find it; edit it, retire another one, then filter Status → Retired and reactivate it.

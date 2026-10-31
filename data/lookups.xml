@@ -29,8 +29,8 @@
   </facet>
 
   <facet code="dipstick" name="Dip Stick">
-    <value code="standard" questions="10" minutes="5" description="Core questions only">Standard</value>
-    <value code="in_depth" questions="18" minutes="12" description="Core questions plus deeper follow-ups">In-depth</value>
+    <value code="standard" questions="10" description="Quick check">Standard</value>
+    <value code="in_depth" questions="15" description="Adds deeper follow-up questions">In-depth</value>
   </facet>
 
   <!-- Rating scales: 5-point and 7-point agreement. NPS uses the fixed 0–10 scale. -->
