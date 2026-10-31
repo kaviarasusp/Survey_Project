@@ -11,7 +11,7 @@ A working demo of the A4U survey builder. It's plain HTML and JavaScript with no
 |---|---|---|
 | **New survey** | All | Five choices: **Survey title**, **Industry** (Insurance, Manufacturing), **Goal** (depends on the industry), **CXO or non-CXO**, **Themes** (AI, Outsourcing), plus **Dip Stick** (Standard or In-depth). The right pane shows the recommended survey; the **number of questions** is editable. **Create survey** picks the questions and opens the survey for editing. |
 | **Surveys** | All | Every survey for the customer. Open one to edit the title, **tag clients** (one of the customer's clients or a new name), edit each question's wording for this survey, reorder or remove questions, add questions from the library (search with a "fits this survey" filter) or **write a new question** for this survey. **Save changes** writes to `surveys.xml`. |
-| **Question library** | Admin | Add a question: **Question text**, **Question type**, **Scale** (answer options for multiple choice and ranking), and where it is used: Industry, Goal, CXO / non-CXO, Themes and Dip Stick. **Search and edit** below: edit, retire, reactivate, or delete a question that no survey uses. Saved to `questions.xml`. |
+| **Question library** | Admin | Add a question: **Question text**, **Question type** (Open ended, Rating scale, Yes / No, NPS), **Scale** (5-point or 7-point for rating questions; NPS is always 0–10), and where it is used: Industry, Goal, CXO / non-CXO, Themes and Dip Stick. **Search and edit** below: edit, retire, reactivate, or delete a question that no survey uses. Saved to `questions.xml`. |
 | **XML data** | Admin | View or download every XML file, reload, or reset the demo data. |
 
 Goals by industry:
@@ -33,7 +33,7 @@ The search box on **Surveys → Add questions** and in the **Question library** 
 ```
 data/lookups.xml     reference lists (industries, goals, audiences, themes, Dip Stick, scales)   read-only
 data/customers.xml   seed data: customers and their clients (offered when tagging a survey)
-data/questions.xml   seed data: question library (96 sample questions)
+data/questions.xml   seed data: question library (96 sample questions: rating, open ended, yes / no, NPS)
 data/surveys.xml     seed data: empty
 api/xml.js           Vercel Function that reads/writes the three editable files
 js/seed-data.js      built-in copy of data/*.xml, used only when index.html is opened from disk

@@ -34,29 +34,18 @@
     <value code="in_depth" questions="18" minutes="12" description="Core questions plus deeper follow-ups">In-depth</value>
   </facet>
 
+  <!-- Rating scales: 5-point and 7-point agreement. NPS uses the fixed 0–10 scale. -->
   <scales>
-    <scale code="agree_5" favourable="4" name="5-point agreement">
+    <scale code="agree_5" favourable="4" name="5-point">
       <point value="1">Strongly disagree</point><point value="2">Disagree</point><point value="3">Neither agree nor disagree</point>
       <point value="4">Agree</point><point value="5">Strongly agree</point>
     </scale>
-    <scale code="quality_5" favourable="4" name="5-point quality">
-      <point value="1">Very poorly</point><point value="2">Poorly</point><point value="3">Neutral</point>
-      <point value="4">Well</point><point value="5">Very well</point>
-    </scale>
-    <scale code="satisfaction_5" favourable="4" name="5-point satisfaction">
-      <point value="1">Very dissatisfied</point><point value="2">Dissatisfied</point><point value="3">Neutral</point>
-      <point value="4">Satisfied</point><point value="5">Very satisfied</point>
-    </scale>
-    <scale code="frequency_5" favourable="4" name="Frequency">
-      <point value="1">Never</point><point value="2">Rarely</point><point value="3">Sometimes</point>
-      <point value="4">Often</point><point value="5">Always</point>
-    </scale>
-    <scale code="agree_7" favourable="5" name="7-point agreement">
+    <scale code="agree_7" favourable="5" name="7-point">
       <point value="1">Strongly disagree</point><point value="2">Disagree</point><point value="3">Somewhat disagree</point>
       <point value="4">Neither agree nor disagree</point><point value="5">Somewhat agree</point><point value="6">Agree</point>
       <point value="7">Strongly agree</point>
     </scale>
-    <scale code="likelihood_11" favourable="9" name="0–10 likelihood" locked="true">
+    <scale code="likelihood_11" favourable="9" name="NPS 0–10" locked="true">
       <point value="0">Not at all likely</point><point value="1">1</point><point value="2">2</point><point value="3">3</point>
       <point value="4">4</point><point value="5">5</point><point value="6">6</point><point value="7">7</point>
       <point value="8">8</point><point value="9">9</point><point value="10">Extremely likely</point>

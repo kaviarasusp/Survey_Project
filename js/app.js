@@ -117,14 +117,15 @@
   const currentCustomer = () => customers().find((c) => c.id === (isAdmin() ? App.workCustomer : App.tenant));
 
   // ---------- question helpers ----------
+  // Allowed question types. Rating scales are 5-point or 7-point; NPS always uses the 0–10 scale.
   const QTYPES = [
-    { code: 'rating', label: 'Rating scale' }, { code: 'multiple_choice', label: 'Multiple choice' },
-    { code: 'yes_no', label: 'Yes / No' }, { code: 'ranking', label: 'Ranking' },
-    { code: 'open_text', label: 'Open text' }, { code: 'nps', label: 'NPS 0–10' },
+    { code: 'open_text', label: 'Open ended' }, { code: 'rating', label: 'Rating scale' },
+    { code: 'yes_no', label: 'Yes / No' }, { code: 'nps', label: 'NPS (0–10)' },
   ];
+  const RATING_SCALES = () => Object.values(LK.scales).filter((s) => !s.locked).map((s) => ({ code: s.code, label: s.name }));
+  const DEFAULT_SCALE = 'agree_5';
   const typeLabel = (code) => (QTYPES.find((t) => t.code === code) || {}).label || code;
-  const hasOptions = (type) => type === 'multiple_choice' || type === 'ranking';
-  const scaleName = (q) => (q.type === 'nps' ? '0–10 likelihood' : q.type === 'rating' && LK.scales[q.scale] ? LK.scales[q.scale].name : '');
+  const scaleName = (q) => (q.type === 'nps' ? '' : q.type === 'rating' ? (LK.scales[q.scale] || LK.scales[DEFAULT_SCALE]).name : '');
   const formatLine = (q) => [typeLabel(q.type), scaleName(q)].filter(Boolean).join(' · ');
 
   function seconds(q) {
@@ -132,8 +133,6 @@
       case 'nps': return 45;
       case 'rating': return 15;
       case 'yes_no': return 10;
-      case 'multiple_choice': return 20;
-      case 'ranking': return 30;
       case 'open_text': return 60;
       default: return 15;
     }
@@ -456,7 +455,6 @@
                 <label class="sr-only" for="vq-${i}">Question ${i + 1} wording</label>
                 <textarea id="vq-${i}" data-act="v-qtext" data-i="${i}" rows="2" maxlength="200">${esc(q.text)}</textarea>`}
                 <span class="meta">${esc(formatLine(q))}${q.custom ? ' · written for this survey' : ''}${q.retired ? ' · retired in the library' : ''}${!q.custom && q.libText && q.text !== q.libText ? ` · <button type="button" class="btn link inline" data-act="v-qreset" data-i="${i}">Use library wording</button>` : ''}</span>
-                ${hasOptions(q.type) && q.options.length ? `<span class="meta">Options: ${esc(q.options.join(' · '))}</span>` : ''}
               </div>
               <span class="q-tools">
                 <button type="button" class="icon-btn" id="v-up-${i}" data-act="v-up" data-i="${i}" aria-label="Move question ${i + 1} up"${i === 0 ? ' disabled' : ''}>↑</button>
@@ -486,10 +484,8 @@
               <div class="field"><label class="label" for="vc-type">Question type</label>
                 <select id="vc-type" data-act="vc" data-f="type">${optionList(QTYPES.filter((t) => t.code !== 'nps'), cf.type)}</select></div>
               ${cf.type === 'rating' ? `<div class="field"><label class="label" for="vc-scale">Scale</label>
-                <select id="vc-scale" data-act="vc" data-f="scale">${optionList(Object.values(LK.scales).filter((s) => !s.locked).map((s) => ({ code: s.code, label: s.name })), cf.scale)}</select></div>` : ''}
+                <select id="vc-scale" data-act="vc" data-f="scale">${optionList(RATING_SCALES(), cf.scale)}</select></div>` : ''}
             </div>
-            ${hasOptions(cf.type) ? `<div class="field"><label class="label" for="vc-options">Answer options</label>
-              <textarea id="vc-options" data-act="vc" data-f="options" rows="3" placeholder="One option per line">${esc(cf.options)}</textarea></div>` : ''}
             <div class="actions">
               <button type="button" class="btn" data-act="v-custom-cancel">Cancel</button>
               <button type="button" class="btn primary" data-act="v-custom-add">Add to survey</button>
@@ -591,10 +587,8 @@
   function addCustomQuestion() {
     const c = V.custom;
     const text = c.text.trim();
-    const opts = c.options.split('\n').map((s) => s.trim()).filter(Boolean);
     if (text.length < 5) { toast('Write the question (at least 5 characters).', true); return; }
-    if (hasOptions(c.type) && (opts.length < 2 || opts.length > 10)) { toast('Give between 2 and 10 answer options.', true); return; }
-    V.draft.questions.push({ ref: '', custom: true, type: c.type, scale: c.type === 'rating' ? c.scale : '', text, options: hasOptions(c.type) ? opts : [] });
+    V.draft.questions.push({ ref: '', custom: true, type: c.type, scale: c.type === 'rating' ? c.scale : '', text, options: [] });
     V.custom = null;
     toast('Question added. Save changes to keep it.');
     keepFocus(renderSurveys);
@@ -671,7 +665,7 @@
       }
       case 'v-tag': tagClient(); return;
       case 'v-untag': if (d) d.clients.splice(i, 1); break;
-      case 'v-custom-open': V.custom = { text: '', type: 'rating', scale: 'agree_5', options: '' }; keepFocus(renderSurveys); { const el = $('#vc-text'); if (el) el.focus(); } return;
+      case 'v-custom-open': V.custom = { text: '', type: 'rating', scale: DEFAULT_SCALE, options: '' }; keepFocus(renderSurveys); { const el = $('#vc-text'); if (el) el.focus(); } return;
       case 'v-custom-cancel': V.custom = null; break;
       case 'v-custom-add': addCustomQuestion(); return;
       case 'v-discard': V.draft = null; break;
@@ -748,13 +742,14 @@
   // QUESTION LIBRARY (Admin)
   // ======================================================================
   const newQuestionForm = () => ({
-    editId: '', text: '', type: 'rating', scale: 'agree_5', options: '',
+    editId: '', text: '', type: 'rating', scale: DEFAULT_SCALE, options: '',
     industry: '', goal: '', audience: [], themes: [], dipstick: 'standard', errors: [],
   });
 
   function editQuestionForm(q) {
     return {
-      editId: q.id, text: q.text, type: q.type, scale: q.type === 'rating' ? (q.scale || 'agree_5') : 'agree_5',
+      editId: q.id, text: q.text, type: QTYPES.some((t) => t.code === q.type) ? q.type : 'open_text',
+      scale: q.type === 'rating' && LK.scales[q.scale] && !LK.scales[q.scale].locked ? q.scale : DEFAULT_SCALE,
       options: q.options.join('\n'), followUp: q.followUp,
       industry: q.industry, goal: q.goal, audience: [...q.audience], themes: [...q.themes], dipstick: q.dipstick || 'standard', errors: [],
     };
@@ -875,7 +870,6 @@
     const editing = Boolean(f.editId);
     const usedIn = editing ? surveysUsing(f.editId).length : 0;
     const goals = f.industry ? goalsFor(f.industry) : [];
-    const scales = Object.values(LK.scales).filter((s) => !s.locked).map((s) => ({ code: s.code, label: s.name }));
     return `<div class="card${editing ? ' editing' : ''}" id="q-form-card">
       <div class="row-head"><h2 style="margin:0">${editing ? `Edit question ${esc(f.editId)}` : 'New question'}</h2>
         ${editing ? '<button type="button" class="btn small" data-act="new-q">+ New question instead</button>' : ''}</div>
@@ -892,12 +886,9 @@
             <div class="field"><label class="label" for="qf-type">Question type <span class="req">*</span></label>
               <select id="qf-type" data-qf="type">${optionList(QTYPES, f.type)}</select></div>
             ${f.type === 'rating' ? `<div class="field"><label class="label" for="qf-scale">Scale <span class="req">*</span></label>
-              <select id="qf-scale" data-qf="scale">${optionList(scales, f.scale)}</select></div>` : ''}
-            ${f.type === 'nps' ? '<div class="field"><span class="label">Scale</span><div class="readonly">0–10 likelihood (NPS, fixed)</div></div>' : ''}
+              <select id="qf-scale" data-qf="scale">${optionList(RATING_SCALES(), f.scale)}</select></div>` : ''}
+            ${f.type === 'nps' ? '<div class="field"><span class="label">Scale</span><div class="readonly">0–10 (fixed for NPS)</div></div>' : ''}
           </div>
-          ${hasOptions(f.type) ? `<div class="field"><label class="label" for="qf-options">Answer options <span class="req">*</span></label>
-            <textarea id="qf-options" data-qf="options" rows="4" placeholder="One option per line">${esc(f.options)}</textarea>
-            <span class="hint">Between 2 and 10 options.</span></div>` : ''}
 
           <h3 class="form-section">Where this question is used</h3>
           <div class="grid">
@@ -931,17 +922,14 @@
 
   function questionPreview() {
     const f = Q.form;
-    const scale = LK.scales[f.type === 'nps' ? 'likelihood_11' : f.scale];
+    const scale = LK.scales[f.type === 'nps' ? 'likelihood_11' : f.scale] || LK.scales[DEFAULT_SCALE];
     let answer = '';
     if (f.type === 'rating' || f.type === 'nps') {
       answer = `<div class="scale" style="grid-template-columns:repeat(${scale.points.length}, minmax(0,1fr))">${scale.points.map((p) => `<span><i class="dot"></i>${esc(f.type === 'nps' ? p.value : p.label)}</span>`).join('')}</div>`;
     } else if (f.type === 'yes_no') {
       answer = '<div class="tags" style="margin-top:12px"><span class="tag">Yes</span><span class="tag">No</span></div>';
-    } else if (f.type === 'open_text') {
-      answer = '<div class="readonly" style="margin-top:12px;min-height:60px"></div>';
     } else {
-      const opts = f.options.split('\n').map((s) => s.trim()).filter(Boolean);
-      answer = `<div class="list" style="margin-top:12px">${opts.map((o, i) => `<span class="tag">${f.type === 'ranking' ? i + 1 + '. ' : ''}${esc(o)}</span>`).join('') || '<span class="hint">Add options to see them here.</span>'}</div>`;
+      answer = '<div class="readonly" style="margin-top:12px;min-height:60px"></div>';
     }
     return `<h3 style="margin-bottom:6px">Respondent preview</h3>
       <p class="hint" style="margin-bottom:10px">[PROVIDER] shown as ${esc((currentCustomer() || { name: 'the provider' }).name)}.</p>
@@ -952,10 +940,6 @@
     const errs = [];
     if (f.text.trim().length < 5) errs.push('Write the question (at least 5 characters).');
     if (/\[(?!PROVIDER\])[A-Z]+\]/.test(f.text)) errs.push('Only the [PROVIDER] token is supported.');
-    if (hasOptions(f.type)) {
-      const n = f.options.split('\n').map((s) => s.trim()).filter(Boolean).length;
-      if (n < 2 || n > 10) errs.push('Give between 2 and 10 answer options.');
-    }
     if (!f.industry) errs.push('Choose an industry.');
     if (!f.audience.length) errs.push('Choose CXO, non-CXO or both.');
     if (!f.themes.length) errs.push('Choose at least one theme.');
@@ -987,7 +971,6 @@
         if (existing) set('updatedAt', todayIso());
         const add = (tag, attrs, text) => { const n = doc.createElement(tag); Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v)); if (text != null) n.textContent = text; q.appendChild(n); };
         add('text', {}, f.text.trim());
-        if (hasOptions(f.type)) f.options.split('\n').map((s) => s.trim()).filter(Boolean).forEach((o) => add('option', {}, o));
         if (f.type === 'nps') add('followUp', { max: '6' }, f.followUp || 'What is the main reason for your score?');
         if (existing) root.replaceChild(q, existing); else root.appendChild(q);
       });
@@ -1012,7 +995,6 @@
       if (t.type === 'radio' && ev.type === 'input') return;
       f[t.dataset.qf] = t.value;
       if (t.dataset.qf === 'text') { $('#qf-count').textContent = `${t.value.length} / 200`; $('#qf-preview').innerHTML = questionPreview(); return; }
-      if (t.dataset.qf === 'options') { $('#qf-preview').innerHTML = questionPreview(); return; }
       if (ev.type === 'change') {
         if (t.dataset.qf === 'industry' && !goalsFor(f.industry).some((g) => g.code === f.goal)) f.goal = '';
         keepFocus(renderQuestions);

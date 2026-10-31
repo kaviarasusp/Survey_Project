@@ -6,8 +6,8 @@
     <text>How likely are you to recommend [PROVIDER] to a peer in the insurance industry?</text>
     <followUp max="6">What is the main reason for your score?</followUp>
   </question>
-  <question id="q-002" status="published" type="rating" scale="satisfaction_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>Overall, how satisfied are you with [PROVIDER]?</text>
+  <question id="q-002" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>Overall, I am satisfied with [PROVIDER].</text>
   </question>
   <question id="q-003" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] understands the insurance business and its regulatory pressures.</text>
@@ -15,8 +15,8 @@
   <question id="q-004" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] delivers good value for the fees we pay.</text>
   </question>
-  <question id="q-005" status="published" type="rating" scale="quality_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] keep you informed about progress, risks and issues?</text>
+  <question id="q-005" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] keeps us well informed about progress, risks and issues.</text>
   </question>
   <question id="q-006" status="published" type="open_text" industry="insurance" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>What is the one thing [PROVIDER] should do differently in the next six months?</text>
@@ -24,8 +24,8 @@
   <question id="q-007" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] brings practical AI ideas that fit our insurance operations.</text>
   </question>
-  <question id="q-008" status="published" type="rating" scale="quality_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] explain the risks and limits of the AI it proposes?</text>
+  <question id="q-008" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] clearly explains the risks and limits of the AI it proposes.</text>
   </question>
   <question id="q-009" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>AI solutions from [PROVIDER] meet our data privacy and model-governance standards.</text>
@@ -33,25 +33,20 @@
   <question id="q-010" status="published" type="yes_no" industry="insurance" goal="" audience="non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>Has [PROVIDER] put at least one AI use case into production for you in the last 12 months?</text>
   </question>
-  <question id="q-011" status="published" type="multiple_choice" industry="insurance" goal="" audience="cxo non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
-    <text>Where would AI from [PROVIDER] add the most value next?</text>
-    <option>Claims triage</option>
-    <option>Underwriting support</option>
-    <option>Fraud detection</option>
-    <option>Customer service</option>
-    <option>Document processing</option>
+  <question id="q-011" status="published" type="open_text" industry="insurance" goal="" audience="cxo non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
+    <text>Where would AI from [PROVIDER] add the most value for us next?</text>
   </question>
-  <question id="q-012" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-012" status="published" type="rating" scale="agree_7" industry="insurance" goal="" audience="non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
     <text>Our teams have the training they need to use the AI tools [PROVIDER] delivered.</text>
   </question>
-  <question id="q-013" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-013" status="published" type="rating" scale="agree_7" industry="insurance" goal="" audience="cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
     <text>[PROVIDER] measures and reports the business benefit of each AI use case.</text>
   </question>
   <question id="q-014" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] consistently meets the agreed service levels.</text>
   </question>
-  <question id="q-015" status="published" type="rating" scale="quality_5" industry="insurance" goal="" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] handle escalations and urgent issues?</text>
+  <question id="q-015" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] handles escalations and urgent issues well.</text>
   </question>
   <question id="q-016" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>The [PROVIDER] team stays stable enough to keep knowledge of our business.</text>
@@ -59,33 +54,28 @@
   <question id="q-017" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] works as a partner in our goals, not just a supplier.</text>
   </question>
-  <question id="q-018" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-018" status="published" type="rating" scale="agree_7" industry="insurance" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>Invoices from [PROVIDER] are accurate and easy to reconcile.</text>
   </question>
-  <question id="q-019" status="published" type="rating" scale="quality_5" industry="insurance" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] bring new team members up to speed?</text>
+  <question id="q-019" status="published" type="rating" scale="agree_7" industry="insurance" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>[PROVIDER] brings new team members up to speed quickly.</text>
   </question>
-  <question id="q-020" status="published" type="rating" scale="agree_5" industry="insurance" goal="" audience="cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-020" status="published" type="rating" scale="agree_7" industry="insurance" goal="" audience="cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>[PROVIDER] proposes ways to reduce our cost of operations each year.</text>
   </question>
   <question id="q-021" status="published" type="rating" scale="agree_5" industry="insurance" goal="executive_insight" audience="cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER]'s work is clearly linked to our strategic priorities.</text>
   </question>
-  <question id="q-022" status="published" type="rating" scale="quality_5" industry="insurance" goal="executive_insight" audience="cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How useful are the business reviews [PROVIDER] holds with your leadership?</text>
+  <question id="q-022" status="published" type="rating" scale="agree_5" industry="insurance" goal="executive_insight" audience="cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>The business reviews [PROVIDER] holds with our leadership are useful.</text>
   </question>
   <question id="q-023" status="published" type="rating" scale="agree_5" industry="insurance" goal="executive_insight" audience="cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] gives us a clear view of how AI will change our operating model.</text>
   </question>
-  <question id="q-024" status="published" type="multiple_choice" industry="insurance" goal="executive_insight" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>Which area should [PROVIDER] focus on most over the next year?</text>
-    <option>Cost reduction</option>
-    <option>Speed of delivery</option>
-    <option>AI and automation</option>
-    <option>Customer experience</option>
-    <option>Risk and compliance</option>
+  <question id="q-024" status="published" type="open_text" industry="insurance" goal="executive_insight" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>Which area should [PROVIDER] focus on most over the next year, and why?</text>
   </question>
-  <question id="q-025" status="published" type="rating" scale="agree_5" industry="insurance" goal="executive_insight" audience="cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-025" status="published" type="rating" scale="agree_7" industry="insurance" goal="executive_insight" audience="cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>[PROVIDER] shares insight from other insurers that helps us make decisions.</text>
   </question>
   <question id="q-026" status="published" type="yes_no" industry="insurance" goal="executive_insight" audience="cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
@@ -94,32 +84,32 @@
   <question id="q-027" status="published" type="open_text" industry="insurance" goal="executive_insight" audience="cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>What would make [PROVIDER] a more strategic partner to your leadership team?</text>
   </question>
-  <question id="q-028" status="published" type="rating" scale="satisfaction_5" industry="insurance" goal="csat_services" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with the day-to-day service from [PROVIDER]?</text>
+  <question id="q-028" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat_services" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>I am satisfied with the day-to-day service from [PROVIDER].</text>
   </question>
-  <question id="q-029" status="published" type="rating" scale="quality_5" industry="insurance" goal="csat_services" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How quickly does [PROVIDER] resolve the issues you raise?</text>
+  <question id="q-029" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat_services" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] resolves the issues we raise quickly.</text>
   </question>
-  <question id="q-030" status="published" type="rating" scale="satisfaction_5" industry="insurance" goal="csat_services" audience="non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with the AI-assisted service tools (chat, automation) [PROVIDER] runs for you?</text>
+  <question id="q-030" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat_services" audience="non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
+    <text>The AI-assisted service tools (chat, automation) [PROVIDER] runs for us work well.</text>
   </question>
   <question id="q-031" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat_services" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>Service reports from [PROVIDER] are clear and accurate.</text>
   </question>
-  <question id="q-032" status="published" type="rating" scale="frequency_5" industry="insurance" goal="csat_services" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>How often do you need to chase [PROVIDER] for updates?</text>
+  <question id="q-032" status="published" type="rating" scale="agree_7" industry="insurance" goal="csat_services" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>We rarely need to chase [PROVIDER] for updates.</text>
   </question>
-  <question id="q-033" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat_services" audience="cxo non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-033" status="published" type="rating" scale="agree_7" industry="insurance" goal="csat_services" audience="cxo non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
     <text>Automation from [PROVIDER] has reduced the effort for our teams.</text>
   </question>
   <question id="q-034" status="published" type="open_text" industry="insurance" goal="csat_services" audience="non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>Describe a recent service experience with [PROVIDER] that stood out, good or bad.</text>
   </question>
-  <question id="q-035" status="published" type="rating" scale="quality_5" industry="insurance" goal="project_health" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How well is the project keeping to the agreed schedule?</text>
+  <question id="q-035" status="published" type="rating" scale="agree_5" industry="insurance" goal="project_health" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>The project is keeping to the agreed schedule.</text>
   </question>
-  <question id="q-036" status="published" type="rating" scale="quality_5" industry="insurance" goal="project_health" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How well is the project keeping to the agreed budget?</text>
+  <question id="q-036" status="published" type="rating" scale="agree_5" industry="insurance" goal="project_health" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>The project is keeping to the agreed budget.</text>
   </question>
   <question id="q-037" status="published" type="rating" scale="agree_5" industry="insurance" goal="project_health" audience="non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>Deliverables meet the agreed requirements the first time.</text>
@@ -127,38 +117,38 @@
   <question id="q-038" status="published" type="rating" scale="agree_5" industry="insurance" goal="project_health" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>Risks and issues on the project are raised early and managed well.</text>
   </question>
-  <question id="q-039" status="published" type="rating" scale="quality_5" industry="insurance" goal="project_health" audience="non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
-    <text>How well is [PROVIDER] using AI tools to speed up delivery on this project?</text>
+  <question id="q-039" status="published" type="rating" scale="agree_5" industry="insurance" goal="project_health" audience="non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] is using AI tools well to speed up delivery on this project.</text>
   </question>
   <question id="q-040" status="published" type="yes_no" industry="insurance" goal="project_health" audience="cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>Is the project on track to deliver its expected business benefits?</text>
   </question>
-  <question id="q-041" status="published" type="rating" scale="agree_5" industry="insurance" goal="project_health" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-041" status="published" type="rating" scale="agree_7" industry="insurance" goal="project_health" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>The project team has the right skills and seniority.</text>
   </question>
   <question id="q-042" status="published" type="open_text" industry="insurance" goal="project_health" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>What is the biggest risk to this project succeeding?</text>
   </question>
-  <question id="q-043" status="published" type="rating" scale="satisfaction_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with the quality of work from [PROVIDER]?</text>
+  <question id="q-043" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>I am satisfied with the quality of work from [PROVIDER].</text>
   </question>
-  <question id="q-044" status="published" type="rating" scale="satisfaction_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with [PROVIDER]'s responsiveness?</text>
+  <question id="q-044" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>I am satisfied with [PROVIDER]'s responsiveness.</text>
   </question>
-  <question id="q-045" status="published" type="rating" scale="satisfaction_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with the AI capabilities [PROVIDER] offers?</text>
+  <question id="q-045" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
+    <text>I am satisfied with the AI capabilities [PROVIDER] offers.</text>
   </question>
-  <question id="q-046" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-046" status="published" type="rating" scale="agree_7" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>[PROVIDER] makes it easy to do business with them.</text>
   </question>
-  <question id="q-047" status="published" type="rating" scale="agree_5" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-047" status="published" type="rating" scale="agree_7" industry="insurance" goal="csat" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>[PROVIDER] acts on the feedback we give.</text>
   </question>
   <question id="q-048" status="published" type="yes_no" industry="insurance" goal="csat" audience="cxo non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>Would you choose [PROVIDER] again for this work?</text>
   </question>
-  <question id="q-049" status="published" type="rating" scale="satisfaction_5" industry="insurance" goal="product_platform" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with the platform [PROVIDER] provides?</text>
+  <question id="q-049" status="published" type="rating" scale="agree_5" industry="insurance" goal="product_platform" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>I am satisfied with the platform [PROVIDER] provides.</text>
   </question>
   <question id="q-050" status="published" type="rating" scale="agree_5" industry="insurance" goal="product_platform" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>The platform is reliable and available when our users need it.</text>
@@ -169,16 +159,11 @@
   <question id="q-052" status="published" type="rating" scale="agree_5" industry="insurance" goal="product_platform" audience="cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>The platform roadmap matches our business priorities.</text>
   </question>
-  <question id="q-053" status="published" type="multiple_choice" industry="insurance" goal="product_platform" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>Which platform capability matters most to you?</text>
-    <option>Policy administration</option>
-    <option>Claims</option>
-    <option>Billing</option>
-    <option>Analytics and reporting</option>
-    <option>AI assistants</option>
+  <question id="q-053" status="published" type="open_text" industry="insurance" goal="product_platform" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>Which platform capability matters most to you, and why?</text>
   </question>
-  <question id="q-054" status="published" type="rating" scale="quality_5" industry="insurance" goal="product_platform" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>How well does the platform integrate with our other systems?</text>
+  <question id="q-054" status="published" type="rating" scale="agree_7" industry="insurance" goal="product_platform" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>The platform integrates well with our other systems.</text>
   </question>
   <question id="q-055" status="published" type="open_text" industry="insurance" goal="product_platform" audience="non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
     <text>Which feature would most improve the platform for your users?</text>
@@ -187,8 +172,8 @@
     <text>How likely are you to recommend [PROVIDER] to a peer in manufacturing?</text>
     <followUp max="6">What is the main reason for your score?</followUp>
   </question>
-  <question id="q-057" status="published" type="rating" scale="satisfaction_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>Overall, how satisfied are you with [PROVIDER]?</text>
+  <question id="q-057" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>Overall, I am satisfied with [PROVIDER].</text>
   </question>
   <question id="q-058" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] understands our manufacturing operations and supply chain.</text>
@@ -196,8 +181,8 @@
   <question id="q-059" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] delivers good value for the fees we pay.</text>
   </question>
-  <question id="q-060" status="published" type="rating" scale="quality_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] keep you informed about progress, risks and issues?</text>
+  <question id="q-060" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] keeps us well informed about progress, risks and issues.</text>
   </question>
   <question id="q-061" status="published" type="open_text" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>What is the one thing [PROVIDER] should do differently in the next six months?</text>
@@ -205,8 +190,8 @@
   <question id="q-062" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] brings practical AI ideas for our plants and supply chain.</text>
   </question>
-  <question id="q-063" status="published" type="rating" scale="quality_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] explain the risks and limits of the AI it proposes?</text>
+  <question id="q-063" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] clearly explains the risks and limits of the AI it proposes.</text>
   </question>
   <question id="q-064" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>AI from [PROVIDER] is improving our forecasting and quality decisions.</text>
@@ -214,25 +199,20 @@
   <question id="q-065" status="published" type="yes_no" industry="manufacturing" goal="" audience="non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>Has [PROVIDER] put at least one AI use case into production for you in the last 12 months?</text>
   </question>
-  <question id="q-066" status="published" type="multiple_choice" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
-    <text>Where would AI from [PROVIDER] add the most value next?</text>
-    <option>Demand forecasting</option>
-    <option>Predictive maintenance</option>
-    <option>Quality inspection</option>
-    <option>Inventory planning</option>
-    <option>Customer service</option>
+  <question id="q-066" status="published" type="open_text" industry="manufacturing" goal="" audience="cxo non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
+    <text>Where would AI from [PROVIDER] add the most value for us next?</text>
   </question>
-  <question id="q-067" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-067" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="" audience="non_cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
     <text>Our teams have the training they need to use the AI tools [PROVIDER] delivered.</text>
   </question>
-  <question id="q-068" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-068" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="" audience="cxo" themes="ai" dipstick="in_depth" createdAt="2026-10-01">
     <text>[PROVIDER] measures and reports the business benefit of each AI use case.</text>
   </question>
   <question id="q-069" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] consistently meets the agreed service levels.</text>
   </question>
-  <question id="q-070" status="published" type="rating" scale="quality_5" industry="manufacturing" goal="" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] handle escalations and urgent issues?</text>
+  <question id="q-070" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] handles escalations and urgent issues well.</text>
   </question>
   <question id="q-071" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>The [PROVIDER] team stays stable enough to keep knowledge of our business.</text>
@@ -240,20 +220,20 @@
   <question id="q-072" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] works as a partner in our goals, not just a supplier.</text>
   </question>
-  <question id="q-073" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-073" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>Invoices from [PROVIDER] are accurate and easy to reconcile.</text>
   </question>
-  <question id="q-074" status="published" type="rating" scale="quality_5" industry="manufacturing" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] bring new team members up to speed?</text>
+  <question id="q-074" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>[PROVIDER] brings new team members up to speed quickly.</text>
   </question>
-  <question id="q-075" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="" audience="cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-075" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="" audience="cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>[PROVIDER] proposes ways to reduce our cost of operations each year.</text>
   </question>
   <question id="q-076" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="product_prelaunch" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>We are confident the product is ready for launch.</text>
   </question>
-  <question id="q-077" status="published" type="rating" scale="quality_5" industry="manufacturing" goal="product_prelaunch" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How thoroughly has [PROVIDER] completed testing before launch?</text>
+  <question id="q-077" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="product_prelaunch" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>[PROVIDER] has tested the product thoroughly before launch.</text>
   </question>
   <question id="q-078" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="product_prelaunch" audience="cxo non_cxo" themes="ai" dipstick="standard" createdAt="2026-10-01">
     <text>AI features in the product have been tested with realistic data.</text>
@@ -261,13 +241,8 @@
   <question id="q-079" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="product_prelaunch" audience="cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>The launch plan is clear about timing, owners and risks.</text>
   </question>
-  <question id="q-080" status="published" type="multiple_choice" industry="manufacturing" goal="product_prelaunch" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+  <question id="q-080" status="published" type="open_text" industry="manufacturing" goal="product_prelaunch" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>What is the biggest open risk before launch?</text>
-    <option>Product quality</option>
-    <option>Supply readiness</option>
-    <option>Distributor readiness</option>
-    <option>Training</option>
-    <option>Pricing</option>
   </question>
   <question id="q-081" status="published" type="yes_no" industry="manufacturing" goal="product_prelaunch" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>Are the support and service teams ready for launch day?</text>
@@ -275,8 +250,8 @@
   <question id="q-082" status="published" type="open_text" industry="manufacturing" goal="product_prelaunch" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>What must be fixed before the product launches?</text>
   </question>
-  <question id="q-083" status="published" type="rating" scale="satisfaction_5" industry="manufacturing" goal="product_launch_opinion" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with how the product launch went?</text>
+  <question id="q-083" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="product_launch_opinion" audience="cxo non_cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>I am satisfied with how the product launch went.</text>
   </question>
   <question id="q-084" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="product_launch_opinion" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>[PROVIDER] resolved launch issues quickly.</text>
@@ -287,22 +262,17 @@
   <question id="q-086" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="product_launch_opinion" audience="cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>The launch is on track to meet its sales and adoption targets.</text>
   </question>
-  <question id="q-087" status="published" type="rating" scale="quality_5" industry="manufacturing" goal="product_launch_opinion" audience="non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>How well did [PROVIDER] support your teams during the launch?</text>
+  <question id="q-087" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="product_launch_opinion" audience="non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>[PROVIDER] supported our teams well during the launch.</text>
   </question>
-  <question id="q-088" status="published" type="multiple_choice" industry="manufacturing" goal="product_launch_opinion" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>Which part of the launch went best?</text>
-    <option>Product quality</option>
-    <option>Marketing</option>
-    <option>Distributor readiness</option>
-    <option>Customer support</option>
-    <option>Supply</option>
+  <question id="q-088" status="published" type="open_text" industry="manufacturing" goal="product_launch_opinion" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>Which part of the launch went best, and why?</text>
   </question>
   <question id="q-089" status="published" type="open_text" industry="manufacturing" goal="product_launch_opinion" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>What should we do differently at the next launch?</text>
   </question>
-  <question id="q-090" status="published" type="rating" scale="satisfaction_5" industry="manufacturing" goal="distributor" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
-    <text>How satisfied are you with the support [PROVIDER] gives our distributors?</text>
+  <question id="q-090" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="distributor" audience="non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
+    <text>I am satisfied with the support [PROVIDER] gives our distributors.</text>
   </question>
   <question id="q-091" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="distributor" audience="cxo non_cxo" themes="outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>Distributors receive accurate stock and delivery information.</text>
@@ -313,11 +283,11 @@
   <question id="q-093" status="published" type="rating" scale="agree_5" industry="manufacturing" goal="distributor" audience="cxo" themes="ai outsourcing" dipstick="standard" createdAt="2026-10-01">
     <text>Our distributor network is growing with [PROVIDER]'s help.</text>
   </question>
-  <question id="q-094" status="published" type="rating" scale="quality_5" industry="manufacturing" goal="distributor" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>How well does [PROVIDER] handle distributor complaints and returns?</text>
+  <question id="q-094" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="distributor" audience="non_cxo" themes="outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>[PROVIDER] handles distributor complaints and returns well.</text>
   </question>
-  <question id="q-095" status="published" type="rating" scale="frequency_5" industry="manufacturing" goal="distributor" audience="non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
-    <text>How often do distributors report problems with orders?</text>
+  <question id="q-095" status="published" type="rating" scale="agree_7" industry="manufacturing" goal="distributor" audience="non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
+    <text>Distributors rarely report problems with orders.</text>
   </question>
   <question id="q-096" status="published" type="open_text" industry="manufacturing" goal="distributor" audience="cxo non_cxo" themes="ai outsourcing" dipstick="in_depth" createdAt="2026-10-01">
     <text>What would most improve the experience for our distributors?</text>
