@@ -986,54 +986,64 @@
     const editing = Boolean(f.editId);
     const usedIn = editing ? surveysUsing(f.editId).length : 0;
     const goals = f.industry ? goalsFor(f.industry) : [];
-    return `<div class="card${editing ? ' editing' : ''}" id="q-form-card">
-      <div class="row-head"><h2 style="margin:0">${editing ? `Edit question ${esc(f.editId)}` : 'New question'}</h2>
-        ${editing ? '<button type="button" class="btn small" data-act="new-q">+ New question instead</button>' : ''}</div>
-      ${editing && usedIn ? `<div class="note" style="margin:14px 0 0">Used in <strong>${usedIn} survey${usedIn === 1 ? '' : 's'}</strong>. Surveys that use the library wording will show your changes.</div>` : ''}
-      ${f.errors.length ? `<div class="note warn" role="alert" style="margin-top:14px"><strong>Fix these to save:</strong><br>${f.errors.map(esc).join('<br>')}</div>` : ''}
-      <div class="cols" style="gap:18px;margin-top:16px">
-        <div class="col-main" style="gap:0">
+    const seg = (name, items, isChecked, type = 'radio', attrs = () => '') => items.map((it) => `<label for="${name}-${it.code}"${it.title ? ` title="${esc(it.title)}"` : ''}><input type="${type}" name="${name}" id="${name}-${it.code}" value="${esc(it.code)}"${attrs(it)}${isChecked(it) ? ' checked' : ''}>${esc(it.label)}${it.n ? ` <span class="seg-n">${esc(it.n)}</span>` : ''}</label>`).join('');
+    return `<div class="cols">
+      <div class="col-main">
+        <div class="card${editing ? ' editing' : ''}" id="q-form-card">
+          ${editing ? `<div class="row-head" style="margin-bottom:12px"><h2 style="margin:0">Edit question ${esc(f.editId)}</h2>
+            <button type="button" class="btn small" data-act="new-q">New question instead</button></div>` : ''}
+          ${editing && usedIn ? `<div class="note" style="margin-bottom:14px">Used in <strong>${usedIn} survey${usedIn === 1 ? '' : 's'}</strong>. Surveys that use the library wording will show your changes.</div>` : ''}
+          ${f.errors.length ? `<div class="note warn" role="alert" style="margin-bottom:14px"><strong>Fix these to save:</strong> ${f.errors.map(esc).join(' ')}</div>` : ''}
           <div class="field">
             <label class="label" for="qf-text">Question text <span class="req">*</span></label>
-            <textarea id="qf-text" data-qf="text" rows="3" maxlength="200" placeholder="e.g. How well does [PROVIDER] keep you informed about risks?">${esc(f.text)}</textarea>
+            <textarea id="qf-text" data-qf="text" rows="2" maxlength="200" placeholder="e.g. [PROVIDER] keeps us informed about risks before they affect us.">${esc(f.text)}</textarea>
             <div class="row-head"><span class="hint">Type [PROVIDER] where the IT service provider's name should appear.</span><span class="hint" id="qf-count">${f.text.length} / 200</span></div>
           </div>
-          <div class="grid">
-            <div class="field"><label class="label" for="qf-type">Question type <span class="req">*</span></label>
-              <select id="qf-type" data-qf="type">${optionList(QTYPES, f.type)}</select></div>
-            ${f.type === 'rating' ? `<div class="field"><label class="label" for="qf-scale">Scale <span class="req">*</span></label>
-              <select id="qf-scale" data-qf="scale">${optionList(RATING_SCALES(), f.scale)}</select></div>` : ''}
-            ${f.type === 'nps' ? '<div class="field"><span class="label">Scale</span><div class="readonly">0–10 (fixed for NPS)</div></div>' : ''}
+          <div class="form-grid">
+            <div class="field span-2">
+              <span class="label" id="qf-type-label">Question type <span class="req">*</span></span>
+              <div class="segmented" role="radiogroup" aria-labelledby="qf-type-label">${seg('qf-type', QTYPES, (t) => f.type === t.code, 'radio', () => ' data-qf="type"')}</div>
+            </div>
+            <div class="field">
+              <span class="label" id="qf-scale-label">Scale</span>
+              ${f.type === 'rating'
+                ? `<div class="segmented" role="radiogroup" aria-labelledby="qf-scale-label">${seg('qf-scale', RATING_SCALES(), (x) => f.scale === x.code, 'radio', () => ' data-qf="scale"')}</div>`
+                : `<div class="readonly">${f.type === 'nps' ? '0–10 (fixed for NPS)' : 'Not needed'}</div>`}
+            </div>
+            <div class="field">
+              <label class="label" for="qf-industry">Industry <span class="req">*</span></label>
+              <select id="qf-industry" data-qf="industry">${optionList(LK.facets.industry, f.industry, 'Choose industry')}</select>
+            </div>
+            <div class="field">
+              <label class="label" for="qf-goal">Goal</label>
+              <select id="qf-goal" data-qf="goal"${f.industry ? '' : ' disabled'}>${f.industry ? `<option value="">All ${esc(label('industry', f.industry))} goals</option>${optionList(goals, f.goal)}` : '<option value="">Choose an industry first</option>'}</select>
+            </div>
+            <div class="field">
+              <span class="label" id="qf-aud-label">Audience <span class="req">*</span> <span class="hint">(one or both)</span></span>
+              <div class="segmented" role="group" aria-labelledby="qf-aud-label">${seg('qf-aud', LK.facets.audience.map((a) => ({ ...a, title: a.description })), (a) => f.audience.includes(a.code), 'checkbox', () => ' data-act="qf-multi" data-facet="audience"')}</div>
+            </div>
+            <div class="field span-2">
+              <span class="label">Theme <span class="hint">(leave empty for a core question)</span></span>
+              <div class="chips compact">${LK.facets.theme.map((t) => chip(`qf-theme-${t.code}`, 'qf-multi', t.code, f.themes.includes(t.code), t.label, 'checkbox', '', swatch(themeColor(t.code))).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="themes"')).join('')}</div>
+            </div>
+            <div class="field">
+              <span class="label" id="qf-dip-label">Dip Stick</span>
+              <div class="segmented" role="radiogroup" aria-labelledby="qf-dip-label">${seg('qf-dip', LK.facets.dipstick.map((d) => ({ ...d, title: d.code === 'standard' ? 'Used in Standard and In-depth surveys' : 'Used only in In-depth surveys' })), (d) => f.dipstick === d.code, 'radio', () => ' data-qf="dipstick"')}</div>
+            </div>
           </div>
+        </div>
+      </div>
 
-          <h3 class="form-section">Where this question is used</h3>
-          <div class="grid">
-            <div class="field"><label class="label" for="qf-industry">Industry <span class="req">*</span></label>
-              <select id="qf-industry" data-qf="industry">${optionList(LK.facets.industry, f.industry, 'Choose industry')}</select></div>
-            <div class="field"><label class="label" for="qf-goal">Goal</label>
-              <select id="qf-goal" data-qf="goal"${f.industry ? '' : ' disabled'}>${f.industry ? `<option value="">All ${esc(label('industry', f.industry))} goals</option>${optionList(goals, f.goal)}` : '<option value="">Choose an industry first</option>'}</select></div>
-          </div>
-          <div class="field"><span class="label">Is this for CXO or non-CXO? <span class="req">*</span></span>
-            <div class="chips">${LK.facets.audience.map((a) => chip(`qf-aud-${a.code}`, 'qf-multi', a.code, f.audience.includes(a.code), a.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="audience"')).join('')}</div>
-            <span class="hint">Pick both if it suits either audience.</span></div>
-          <div class="field"><span class="label">Theme</span>
-            <div class="chips">${LK.facets.theme.map((t) => chip(`qf-theme-${t.code}`, 'qf-multi', t.code, f.themes.includes(t.code), t.label, 'checkbox', '', swatch(themeColor(t.code))).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="themes"')).join('')}</div>
-            <span class="hint">Leave empty for a <strong>core</strong> question (used in every matching survey). Pick a theme for a question that is added only when that theme is chosen.</span></div>
-          <div class="field"><span class="label" id="qf-dip-label">Dip Stick</span>
-            <div class="cards-pick" role="radiogroup" aria-labelledby="qf-dip-label">
-              ${LK.facets.dipstick.map((d) => `<label class="pick" for="qf-dip-${d.code}">
-                <input type="radio" name="qf-dipstick" id="qf-dip-${d.code}" data-qf="dipstick" value="${d.code}"${f.dipstick === d.code ? ' checked' : ''}>
-                <strong>${esc(d.label)}</strong><span>${d.code === 'standard' ? 'Used in Standard and In-depth surveys' : 'Used only in In-depth surveys'}</span></label>`).join('')}
-            </div></div>
+      <aside class="composer qcomposer" aria-labelledby="qf-prev-title">
+        <div class="composer-head"><h2 id="qf-prev-title">Respondent preview</h2>
+          <p class="hint">How clients will see the question. [PROVIDER] is shown as ${esc((currentCustomer() || { name: 'your provider' }).name)}.</p></div>
+        <div class="composer-body" id="qf-preview">${questionPreview()}</div>
+        <div class="composer-foot">
+          <span class="foot-summary">${editing ? `Editing <b>${esc(f.editId)}</b>` : 'New question'}</span>
+          ${editing ? '<button type="button" class="btn" data-act="cancel-q">Cancel</button>' : '<button type="button" class="btn" data-act="clear-q">Clear</button>'}
+          <button type="button" class="btn primary" id="qf-save" data-act="save-q">${editing ? 'Save changes' : 'Add question'}</button>
         </div>
-        <div class="col-narrow">
-          <div class="preview" id="qf-preview">${questionPreview()}</div>
-        </div>
-      </div>
-      <div class="form-actions">
-        ${editing ? '<button type="button" class="btn" data-act="cancel-q">Cancel</button>' : '<button type="button" class="btn" data-act="clear-q">Clear</button>'}
-        <button type="button" class="btn primary" id="qf-save" data-act="save-q">${editing ? 'Save changes' : 'Add question'}</button>
-      </div>
+      </aside>
     </div>`;
   }
 
@@ -1042,15 +1052,24 @@
     const scale = LK.scales[f.type === 'nps' ? 'likelihood_11' : f.scale] || LK.scales[DEFAULT_SCALE];
     let answer = '';
     if (f.type === 'rating' || f.type === 'nps') {
-      answer = `<div class="scale" style="grid-template-columns:repeat(${scale.points.length}, minmax(0,1fr))">${scale.points.map((p) => `<span><i class="dot"></i>${esc(f.type === 'nps' ? p.value : p.label)}</span>`).join('')}</div>`;
+      answer = `<div class="scale" style="grid-template-columns:repeat(${scale.points.length}, minmax(0,1fr))">${scale.points.map((p, i, all) => `<span><i class="dot"></i>${esc(f.type === 'nps' ? p.value : (all.length > 5 && i > 0 && i < all.length - 1 ? String(i + 1) : p.label))}</span>`).join('')}</div>`;
     } else if (f.type === 'yes_no') {
       answer = '<div class="tags" style="margin-top:12px"><span class="tag">Yes</span><span class="tag">No</span></div>';
     } else {
-      answer = '<div class="readonly" style="margin-top:12px;min-height:60px"></div>';
+      answer = '<div class="readonly answer-box"></div>';
     }
-    return `<h3 style="margin-bottom:6px">Respondent preview</h3>
-      <p class="hint" style="margin-bottom:10px">[PROVIDER] shown as ${esc((currentCustomer() || { name: 'the provider' }).name)}.</p>
-      <p style="font-weight:500">${f.text.trim() ? fillTokens(f.text, currentCustomer()) : '<span class="hint">Start typing the question…</span>'}</p>${answer}`;
+    const rows = [
+      ['Industry', f.industry ? label('industry', f.industry) : '—'],
+      ['Goal', f.industry ? (f.goal ? label('survey_goal', f.goal) : `All ${label('industry', f.industry)} goals`) : '—'],
+      ['Audience', f.audience.length ? f.audience.map((a) => label('audience', a)).join(' + ') : '—'],
+      ['Theme', f.themes.length ? f.themes.map((t) => label('theme', t)).join(' + ') : 'Core (every matching survey)'],
+      ['Dip Stick', f.dipstick === 'standard' ? 'Standard and In-depth surveys' : 'In-depth surveys only'],
+    ];
+    return `<div class="preview-q">
+        <p class="preview-text">${f.text.trim() ? fillTokens(f.text, currentCustomer()) : '<span class="hint">Start typing the question…</span>'}</p>${answer}
+      </div>
+      <h3 class="preview-sub">Where it will be used</h3>
+      <dl class="usage-list">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
   }
 
   function validateQuestion(f) {
@@ -1129,6 +1148,7 @@
     if (ev.type === 'change' && t.dataset.act === 'qf-multi') {
       const arr = f[t.dataset.facet];
       f[t.dataset.facet] = t.checked ? [...new Set([...arr, t.value])] : arr.filter((v) => v !== t.value);
+      $('#qf-preview').innerHTML = questionPreview();
       return;
     }
     if (ev.type !== 'click') return;

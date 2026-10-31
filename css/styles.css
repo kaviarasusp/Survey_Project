@@ -363,3 +363,30 @@ pre.xml { margin: 0; max-height: 560px; overflow: auto; padding: 14px; border-ra
   main { padding-bottom: calc(var(--bottomnav-h) + 24px); }
   #tab-survey { padding-bottom: 76px; }
 }
+
+/* New question: preview panel in the same style as Your survey */
+.qcomposer .composer-head p { margin-top: 4px; }
+.preview-q { padding: 16px; margin-top: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); }
+.preview-text { font-size: 16px; font-weight: 600; line-height: 1.4; }
+.preview-q .scale { display: grid; gap: 6px; text-align: center; font-size: 11px; color: var(--muted); margin-top: 14px; }
+.preview-q .scale span { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.preview-q .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #9AA5AF; background: var(--surface); }
+.answer-box { margin-top: 12px; min-height: 64px; background: var(--surface); border: 1px solid var(--line); }
+.preview-sub { font-size: 14px !important; margin: 18px 0 8px; }
+.usage-list { margin: 0; display: flex; flex-direction: column; }
+.usage-list div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); font-size: 14px; }
+.usage-list div:last-child { border-bottom: 0; }
+.usage-list dt { color: var(--muted); }
+.usage-list dd { margin: 0; font-weight: 550; }
+.segmented label { min-width: 0; }
+@media (max-width: 900px) { #tab-questions { padding-bottom: 76px; } }
+
+/* Medium screens: side menus become a row above the content, leaving room for form + preview side by side */
+@media (max-width: 1180px) and (min-width: 761px) {
+  .settings { grid-template-columns: 1fr; }
+  .settings-menu { flex-direction: row; flex-wrap: wrap; position: static; }
+  .settings-link { width: auto; flex: 0 1 auto; }
+  .qcomposer { flex-basis: 320px; }
+  .qcomposer .foot-summary { display: none; }
+  .qcomposer .composer-foot .btn.primary { flex: 1; }
+}
