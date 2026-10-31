@@ -105,11 +105,16 @@
   // Admin sees every tab and every survey; a customer creates and edits its own surveys.
   const allowedTabs = () => (isAdmin() ? ['survey', 'surveys', 'questions', 'admin', 'data'] : ['survey', 'surveys']);
 
+  // Each theme gets its own colour (in the composition bar, section headers and question tags).
+  const CORE_COLOR = '#1E5B54';
+  const THEME_COLORS = ['#5A51C9', '#C07A12', '#0F7A8A', '#A3407A', '#4D7C0F', '#B4532A', '#3B6FB6'];
+  const themeColor = (code) => THEME_COLORS[Math.max(0, LK.facets.theme.findIndex((t) => t.code === code)) % THEME_COLORS.length];
+  const swatch = (color) => `<span class="swatch" style="--c:${color}" aria-hidden="true"></span>`;
   const THEME_EXTRA = 5;      // theme questions added on top of the core set, shared across the chosen themes
   const CORE_MIN = 10;        // a survey always has at least this many core questions
   // Default split of the theme questions: 1 theme = 5; 2 themes = 3 + 2; 3 themes = 2 + 2 + 1 …
   const splitThemes = (themes) => Object.fromEntries(themes.map((t, i) => [t, Math.floor(THEME_EXTRA / themes.length) + (i < THEME_EXTRA % themes.length ? 1 : 0)]));
-  const newSurveyForm = () => ({ title: '', industry: '', goal: '', audience: '', themes: [], dipstick: 'standard', core: dipstickDefault('standard'), themeCounts: {}, errors: [] });
+  const newSurveyForm = () => ({ title: '', industry: '', goal: '', audience: '', themes: [], dipstick: 'standard', core: dipstickDefault('standard'), themeCounts: {}, open: {}, errors: [] });
   let N = null;                                                                         // New survey form
   const V = { selected: '', draft: null, search: '', type: '', fitOnly: true, clientName: '', custom: null };  // Surveys tab
   const Q = { search: '', industry: '', status: 'active', showForm: false, form: null, confirm: null };       // Question library
@@ -158,8 +163,8 @@
     return esc(text).replace(/\[(PROVIDER|CLIENT|LOB)\]/g, (m) => `<span class="token">${esc(map[m])}</span>`);
   }
 
-  const chip = (id, act, value, checked, text, type = 'checkbox', name = '') =>
-    `<label class="chip" for="${id}"><input type="${type}" id="${id}"${name ? ` name="${name}"` : ''} data-act="${act}" value="${esc(value)}"${checked ? ' checked' : ''}>${esc(text)}</label>`;
+  const chip = (id, act, value, checked, text, type = 'checkbox', name = '', before = '') =>
+    `<label class="chip" for="${id}"><input type="${type}" id="${id}"${name ? ` name="${name}"` : ''} data-act="${act}" value="${esc(value)}"${checked ? ' checked' : ''}>${before}${esc(text)}</label>`;
   const optionList = (list, selected, placeholder) =>
     (placeholder !== undefined ? `<option value="">${esc(placeholder)}</option>` : '')
     + list.map((v) => `<option value="${esc(v.code)}"${v.code === selected ? ' selected' : ''}>${esc(v.label)}</option>`).join('');
@@ -237,88 +242,124 @@
     const dip = fv('dipstick', f.dipstick);
     // Number each question by its position in the survey (the closing open question comes last).
     const pos = new Map(rec ? rec.ordered.map((x, i) => [x.q.id, i + 1]) : []);
-    const qList = (items) => items.map((q) => `<div class="qitem"><span class="n">${pos.get(q.id)}</span><span>${fillTokens(q.text, customer)}<span class="meta">${esc(formatLine(q))}${q.type === 'open_text' && pos.get(q.id) === pos.size ? ' · asked last' : ''}</span></span><span></span></div>`).join('');
-    const themeTotal = f.themes.reduce((n, t) => n + (f.themeCounts[t] ?? 0), 0);
+    const qList = (items) => items.map((q) => `<li class="qitem"><span class="n">${pos.get(q.id)}</span><span>${fillTokens(q.text, customer)}<span class="meta">${esc(formatLine(q))}${q.type === 'open_text' && pos.get(q.id) === pos.size ? ', asked last' : ''}</span></span></li>`).join('');
+
+    const total = rec ? rec.ordered.length : 0;
+    const segs = rec ? [{ label: 'Core', n: rec.core.length, color: CORE_COLOR }, ...rec.themes.map((t) => ({ label: label('theme', t.code), n: t.picked.length, color: themeColor(t.code) }))] : [];
+    const isOpen = (key) => N.open[key] !== false;
+
+    // Keep the panel's scroll position when it re-renders.
+    const prevBody = el.querySelector('.composer-body');
+    const prevScroll = prevBody ? prevBody.scrollTop : 0;
 
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>New survey</h1><p>Name the survey and choose who it is for. You get ${CORE_MIN} or more core questions, plus extra questions for each theme you pick. You can edit them after you create the survey and tag clients later.</p></div>
+        <div><h1>New survey</h1><p>Name the survey and choose who it is for. You get at least ${CORE_MIN} core questions, plus extra questions for each theme you pick. Edit them after you create the survey and tag clients later.</p></div>
       </div>
       <div class="cols">
         <div class="col-main">
           <div class="card" id="new-survey-card">
-            ${f.errors.length ? `<div class="note warn" role="alert" style="margin-bottom:16px"><strong>Fill these in to create the survey:</strong><br>${f.errors.map(esc).join('<br>')}</div>` : ''}
-            <div class="field">
-              <label class="label" for="ns-title">Survey title <span class="req">*</span></label>
-              <input type="text" id="ns-title" data-act="title" value="${esc(f.title)}" maxlength="120" placeholder="e.g. Harbor Mutual · Executive insight · Q4 2026">
-            </div>
-            <div class="grid">
+            ${f.errors.length ? `<div class="note warn" role="alert" style="margin-bottom:16px"><strong>Fill these in to create the survey:</strong> ${f.errors.map(esc).join(', ')}.</div>` : ''}
+            <div class="form-group">
+              <h2>About the survey</h2>
+              <p class="sub">These decide which core questions are picked.</p>
               <div class="field">
-                <label class="label" for="ns-industry">Industry <span class="req">*</span></label>
-                <select id="ns-industry" data-act="industry">${optionList(LK.facets.industry, f.industry, 'Choose industry')}</select>
+                <label class="label" for="ns-title">Survey title <span class="req">*</span></label>
+                <input type="text" id="ns-title" data-act="title" value="${esc(f.title)}" maxlength="120" placeholder="e.g. Harbor Mutual executive insight, Q4 2026">
+              </div>
+              <div class="grid">
+                <div class="field">
+                  <label class="label" for="ns-industry">Industry <span class="req">*</span></label>
+                  <select id="ns-industry" data-act="industry">${optionList(LK.facets.industry, f.industry, 'Choose industry')}</select>
+                </div>
+                <div class="field">
+                  <label class="label" for="ns-goal">Goal <span class="req">*</span></label>
+                  <select id="ns-goal" data-act="goal"${f.industry ? '' : ' disabled'}>${optionList(goals, f.goal, f.industry ? 'Choose goal' : 'Choose an industry first')}</select>
+                </div>
               </div>
               <div class="field">
-                <label class="label" for="ns-goal">Goal <span class="req">*</span></label>
-                <select id="ns-goal" data-act="goal"${f.industry ? '' : ' disabled'}>${optionList(goals, f.goal, f.industry ? 'Choose goal' : 'Choose an industry first')}</select>
+                <span class="label" id="ns-aud-label">Is this for CXO or non-CXO? <span class="req">*</span></span>
+                <div class="chips" role="radiogroup" aria-labelledby="ns-aud-label">${LK.facets.audience.map((a) => chip(`ns-aud-${a.code}`, 'audience', a.code, f.audience === a.code, a.label, 'radio', 'ns-audience')).join('')}</div>
+                ${f.audience ? `<span class="hint">${esc((fv('audience', f.audience) || {}).description)}</span>` : ''}
               </div>
             </div>
-            <div class="field">
-              <span class="label" id="ns-aud-label">Is this for CXO or non-CXO? <span class="req">*</span></span>
-              <div class="chips" role="radiogroup" aria-labelledby="ns-aud-label">${LK.facets.audience.map((a) => chip(`ns-aud-${a.code}`, 'audience', a.code, f.audience === a.code, a.label, 'radio', 'ns-audience')).join('')}</div>
-              ${f.audience ? `<span class="hint">${esc((fv('audience', f.audience) || {}).description)}</span>` : ''}
+
+            <div class="form-group">
+              <h2>Themes</h2>
+              <p class="sub">Optional. Themes add ${THEME_EXTRA} questions in total, shared between the themes you pick: one theme adds ${THEME_EXTRA}, two themes add ${Math.ceil(THEME_EXTRA / 2)} and ${Math.floor(THEME_EXTRA / 2)}.</p>
+              <div class="chips">${LK.facets.theme.map((t) => chip(`ns-theme-${t.code}`, 'theme', t.code, f.themes.includes(t.code), t.label, 'checkbox', '', swatch(themeColor(t.code)))).join('')}</div>
             </div>
-            <div class="field">
-              <span class="label">Themes</span>
-              <div class="chips">${LK.facets.theme.map((t) => chip(`ns-theme-${t.code}`, 'theme', t.code, f.themes.includes(t.code), t.label)).join('')}</div>
-              <span class="hint">Optional. Themes add ${THEME_EXTRA} questions in total, shared between the themes you pick (one theme: ${THEME_EXTRA}; two themes: ${Math.ceil(THEME_EXTRA / 2)} + ${Math.floor(THEME_EXTRA / 2)}). Change the split in the right pane.</span>
-            </div>
-            <div class="field">
-              <span class="label" id="ns-dip-label">Dip Stick</span>
+
+            <div class="form-group">
+              <h2 id="ns-dip-label">Dip Stick</h2>
+              <p class="sub">How deep the survey goes.</p>
               <div class="cards-pick" role="radiogroup" aria-labelledby="ns-dip-label">
                 ${LK.facets.dipstick.map((d) => `
                   <label class="pick" for="ns-dip-${d.code}">
                     <input type="radio" name="ns-dipstick" id="ns-dip-${d.code}" data-act="dipstick" value="${d.code}"${f.dipstick === d.code ? ' checked' : ''}>
-                    <strong>${esc(d.label)}</strong><span>${esc(d.description)} · ${d.questions} core questions</span>
+                    <strong>${esc(d.label)}</strong><span>${esc(d.description)}, ${d.questions} core questions</span>
                   </label>`).join('')}
               </div>
             </div>
           </div>
         </div>
 
-        <aside class="col-side" aria-labelledby="rec-title">
-          <div class="card">
-            <h2 id="rec-title">Recommended survey</h2>
+        <aside class="composer" aria-labelledby="rec-title">
+          <div class="composer-head">
+            <h2 id="rec-title">Your survey</h2>
             ${rec ? `
-              <div class="stats">
-                <div class="stat"><b>${rec.ordered.length}</b><span>questions</span></div>
-                <div class="stat"><b>~${minutes(rec.ordered.map((x) => x.q))}</b><span>minutes</span></div>
-              </div>
-              <p class="note" style="margin-top:12px">${f.core} core${f.themes.length ? ` + ${themeTotal} theme` : ''} = <strong>${f.core + themeTotal} questions</strong> · ${esc(label('industry', f.industry))} · ${esc(label('survey_goal', f.goal))} · ${esc(label('audience', f.audience))} · ${esc(dip.label)}</p>
-
+              <div class="composer-total"><b>${total}</b><span>questions, about ${minutes(rec.ordered.map((x) => x.q))} minutes</span></div>
+              <div class="compbar" role="img" aria-label="${esc(segs.map((x) => `${x.n} ${x.label}`).join(', '))}">${segs.filter((x) => x.n).map((x) => `<span style="--n:${x.n};--c:${x.color}" title="${esc(`${x.label}: ${x.n}`)}"></span>`).join('')}</div>
+              <ul class="legend">${segs.map((x) => `<li>${swatch(x.color)}${esc(x.label)} <b>${x.n}</b></li>`).join('')}</ul>`
+            : '<p class="hint" style="margin-top:6px">Choose an industry, goal and audience to see the questions.</p>'}
+          </div>
+          <div class="composer-body">
+            ${rec ? `
               <section class="rec-section" aria-labelledby="rec-core">
-                <div class="rec-head"><div><h3 id="rec-core">Core questions</h3><span class="hint">Minimum ${CORE_MIN}. ${esc(dip.label)} suggests ${dipstickDefault(f.dipstick)}.</span></div>
-                  ${stepper('core', f.core, CORE_MIN, 40, 'core')}</div>
+                <div class="rec-head">
+                  <div class="rec-title">${swatch(CORE_COLOR)}<div><h3 id="rec-core">Core questions</h3><span class="hint">At least ${CORE_MIN}. ${esc(dip.label)} suggests ${dipstickDefault(f.dipstick)}.</span></div></div>
+                  ${stepper('core', f.core, CORE_MIN, 40, 'core')}
+                </div>
                 ${rec.core.length < f.core ? `<p class="note warn">Only ${rec.core.length} core questions match. Add more after you create the survey.</p>` : ''}
-                <div class="qlist">${qList(rec.core)}</div>
+                <details class="rec-list"${isOpen('core') ? ' open' : ''}><summary data-sec="core">${isOpen('core') ? 'Hide' : 'Show'} ${rec.core.length} questions</summary><ol class="qlist">${qList(rec.core)}</ol></details>
               </section>
-
               ${rec.themes.map((t) => `
-                <section class="rec-section theme-section" aria-labelledby="rec-theme-${esc(t.code)}">
-                  <div class="rec-head"><div><h3 id="rec-theme-${esc(t.code)}">Theme: ${esc(label('theme', t.code))}</h3><span class="hint">${t.pool.length} available</span></div>
-                    ${stepper(`theme:${t.code}`, t.want, 0, 15, label('theme', t.code))}</div>
+                <section class="rec-section" aria-labelledby="rec-theme-${esc(t.code)}">
+                  <div class="rec-head">
+                    <div class="rec-title">${swatch(themeColor(t.code))}<div><h3 id="rec-theme-${esc(t.code)}">${esc(label('theme', t.code))}</h3><span class="hint">Theme questions, ${t.pool.length} available</span></div></div>
+                    ${stepper(`theme:${t.code}`, t.want, 0, 15, label('theme', t.code))}
+                  </div>
                   ${t.picked.length < t.want ? `<p class="note warn">Only ${t.picked.length} ${esc(label('theme', t.code))} questions match.</p>` : ''}
-                  <div class="qlist">${qList(t.picked) || '<p class="hint">No questions for this theme.</p>'}</div>
+                  ${t.picked.length ? `<details class="rec-list"${isOpen(t.code) ? ' open' : ''}><summary data-sec="${esc(t.code)}">${isOpen(t.code) ? 'Hide' : 'Show'} ${t.picked.length} questions</summary><ol class="qlist">${qList(t.picked)}</ol></details>` : ''}
                 </section>`).join('')}
-              ${f.themes.length ? '' : `<p class="hint" style="margin-top:14px">Pick a theme to add ${THEME_EXTRA} theme questions.</p>`}`
-            : `<p class="hint">Choose an industry, goal and audience to see the recommended questions.</p>`}
-            <div class="actions">
-              <button type="button" class="btn" data-act="reset">Clear</button>
-              <button type="button" class="btn primary" id="ns-create" data-act="create">Create survey</button>
-            </div>
+              ${f.themes.length ? '' : `<p class="composer-empty">Pick a theme to add ${THEME_EXTRA} theme questions.</p>`}`
+            : '<p class="composer-empty">The questions appear here as you fill in the form.</p>'}
+          </div>
+          <div class="composer-foot">
+            <span class="foot-summary">${rec ? `<b>${total}</b> questions` : 'Fill in the form first'}</span>
+            <button type="button" class="btn" data-act="reset">Clear</button>
+            <button type="button" class="btn primary" id="ns-create" data-act="create">Create survey</button>
           </div>
         </aside>
       </div>`;
+    const body = el.querySelector('.composer-body');
+    if (body && prevScroll) body.scrollTop = prevScroll;
+    fitComposer();
   }
+
+  // Keep the whole composer (and its Create button) inside the window: its height is the space
+  // left below its top edge, so the question lists scroll inside it. Not used on small screens.
+  function fitComposer() {
+    const c = document.querySelector('#tab-survey .composer');
+    if (!c || document.getElementById('tab-survey').hidden) return;
+    if (window.innerWidth <= 900) { c.style.maxHeight = ''; return; }
+    const top = Math.max(14, c.getBoundingClientRect().top);
+    c.style.maxHeight = `${Math.max(320, window.innerHeight - top - 14)}px`;
+  }
+  let fitQueued = false;
+  const queueFit = () => { if (!fitQueued) { fitQueued = true; requestAnimationFrame(() => { fitQueued = false; fitComposer(); }); } };
+  window.addEventListener('scroll', queueFit, { passive: true });
+  window.addEventListener('resize', queueFit);
 
   async function createSurvey() {
     const f = N;
@@ -363,6 +404,10 @@
   }
 
   function onSurveyEvent(ev) {
+    if (ev.type === 'click' && ev.target.closest('summary[data-sec]')) {
+      const sum = ev.target.closest('summary[data-sec]');
+      ev.preventDefault(); N.open[sum.dataset.sec] = !sum.parentElement.open; renderSurvey(); return;
+    }
     const t = ev.target.closest('[data-act]');
     if (!t) return;
     const act = t.dataset.act;
@@ -472,7 +517,7 @@
           <span class="tag theme">${esc(label('industry', sv.industry))}</span>
           <span class="tag">${esc(label('survey_goal', sv.goal))}</span>
           <span class="tag">${esc(label('audience', sv.audience))}</span>
-          ${sv.themes.map((t) => `<span class="tag">Theme: ${esc(label('theme', t))}</span>`).join('') || '<span class="tag">No themes</span>'}
+          ${sv.themes.map((t) => `<span class="tag">${swatch(themeColor(t))}${esc(label('theme', t))}</span>`).join('') || '<span class="tag">No themes</span>'}
           <span class="tag">Dip Stick: ${esc(label('dipstick', sv.dipstick))}</span>
           <span class="badge grey">${esc(sv.status)}</span>
         </div>
@@ -506,7 +551,7 @@
                 ${q.missing ? `<p class="hint"><em>This question is no longer in the library.</em></p>` : `
                 <label class="sr-only" for="vq-${i}">Question ${i + 1} wording</label>
                 <textarea id="vq-${i}" data-act="v-qtext" data-i="${i}" rows="2" maxlength="200">${esc(q.text)}</textarea>`}
-                <span class="meta"><span class="sect-tag${q.theme ? ' is-theme' : ''}">${q.theme ? `Theme: ${esc(label('theme', q.theme))}` : 'Core'}</span> ${esc(formatLine(q))}${q.custom ? ' · written for this survey' : ''}${q.retired ? ' · retired in the library' : ''}${!q.custom && q.libText && q.text !== q.libText ? ` · <button type="button" class="btn link inline" data-act="v-qreset" data-i="${i}">Use library wording</button>` : ''}</span>
+                <span class="meta"><span class="sect-tag${q.theme ? ' is-theme' : ''}" style="--c:${q.theme ? themeColor(q.theme) : CORE_COLOR}">${swatch(q.theme ? themeColor(q.theme) : CORE_COLOR)}${q.theme ? esc(label('theme', q.theme)) : 'Core'}</span> ${esc(formatLine(q))}${q.custom ? ' · written for this survey' : ''}${q.retired ? ' · retired in the library' : ''}${!q.custom && q.libText && q.text !== q.libText ? ` · <button type="button" class="btn link inline" data-act="v-qreset" data-i="${i}">Use library wording</button>` : ''}</span>
               </div>
               <span class="q-tools">
                 <button type="button" class="icon-btn" id="v-up-${i}" data-act="v-up" data-i="${i}" aria-label="Move question ${i + 1} up"${i === 0 ? ' disabled' : ''}>↑</button>
@@ -514,11 +559,6 @@
                 <button type="button" class="icon-btn" data-act="v-remove" data-i="${i}" aria-label="Remove question ${i + 1}">×</button>
               </span>
             </div>`).join('') || '<p class="hint">No questions. Add some below.</p>'}
-        </div>
-        <div class="actions">
-          ${dirty ? '<span class="note warn unsaved">Unsaved changes</span>' : ''}
-          <button type="button" class="btn" data-act="v-discard"${dirty ? '' : ' disabled'}>Discard changes</button>
-          <button type="button" class="btn primary" id="v-save" data-act="v-save"${dirty ? '' : ' disabled'}>Save changes</button>
         </div>
       </div>
 
@@ -553,6 +593,12 @@
         <div class="chips" style="margin-top:10px">${chip('v-fit', 'v-fit', 'fit', V.fitOnly, 'Only questions that fit this survey')}</div>
         <span class="hint">Fits = same industry and goal, suitable for ${esc(label('audience', sv.audience))}; core questions${sv.themes.length ? ` and questions about ${esc(sv.themes.map((t) => label('theme', t)).join(' or '))}` : ''}.</span>
         <div id="v-add-results" style="margin-top:14px"></div>
+      </div>
+
+      <div class="save-bar${dirty ? '' : ' is-clean'}" id="v-save-bar">
+        <span class="save-state" role="status">${dirty ? 'You have unsaved changes' : 'All changes saved'}</span>
+        <button type="button" class="btn" data-act="v-discard"${dirty ? '' : ' disabled'}>Discard</button>
+        <button type="button" class="btn primary" id="v-save" data-act="v-save"${dirty ? '' : ' disabled'}>Save changes</button>
       </div>`;
   }
 
@@ -653,10 +699,11 @@
     const save = $('#v-save'); const discard = $('[data-act="v-discard"]');
     if (save) save.disabled = !dirty;
     if (discard) discard.disabled = !dirty;
-    const actions = save && save.parentElement;
-    const note = actions && actions.querySelector('.unsaved');
-    if (dirty && !note && actions) actions.insertAdjacentHTML('afterbegin', '<span class="note warn unsaved">Unsaved changes</span>');
-    if (!dirty && note) note.remove();
+    const bar = $('#v-save-bar');
+    if (bar) {
+      bar.classList.toggle('is-clean', !dirty);
+      bar.querySelector('.save-state').textContent = dirty ? 'You have unsaved changes' : 'All changes saved';
+    }
   }
 
   function onSurveysEvent(ev) {
@@ -787,7 +834,7 @@
       `<span class="tag theme">${esc(label('industry', q.industry))} · ${esc(q.goal ? label('survey_goal', q.goal) : 'All goals')}</span>`,
       `<span class="tag">${esc(formatLine(q))}</span>`,
       `<span class="tag">${esc(q.audience.map((a) => label('audience', a)).join(' + '))}</span>`,
-      `<span class="tag">${q.themes.length ? `Theme: ${esc(q.themes.map((t) => label('theme', t)).join(' + '))}` : 'Core'}</span>`,
+      q.themes.length ? q.themes.map((t) => `<span class="tag">${swatch(themeColor(t))}${esc(label('theme', t))}</span>`).join('') : `<span class="tag">${swatch(CORE_COLOR)}Core</span>`,
       `<span class="tag">${esc(label('dipstick', q.dipstick))}</span>`,
     ].join('');
   }
@@ -955,7 +1002,7 @@
             <div class="chips">${LK.facets.audience.map((a) => chip(`qf-aud-${a.code}`, 'qf-multi', a.code, f.audience.includes(a.code), a.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="audience"')).join('')}</div>
             <span class="hint">Pick both if it suits either audience.</span></div>
           <div class="field"><span class="label">Theme</span>
-            <div class="chips">${LK.facets.theme.map((t) => chip(`qf-theme-${t.code}`, 'qf-multi', t.code, f.themes.includes(t.code), t.label).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="themes"')).join('')}</div>
+            <div class="chips">${LK.facets.theme.map((t) => chip(`qf-theme-${t.code}`, 'qf-multi', t.code, f.themes.includes(t.code), t.label, 'checkbox', '', swatch(themeColor(t.code))).replace('data-act="qf-multi"', 'data-act="qf-multi" data-facet="themes"')).join('')}</div>
             <span class="hint">Leave empty for a <strong>core</strong> question (used in every matching survey). Pick a theme for a question that is added only when that theme is chosen.</span></div>
           <div class="field"><span class="label" id="qf-dip-label">Dip Stick</span>
             <div class="cards-pick" role="radiogroup" aria-labelledby="qf-dip-label">
@@ -968,7 +1015,7 @@
           <div class="preview" id="qf-preview">${questionPreview()}</div>
         </div>
       </div>
-      <div class="actions">
+      <div class="form-actions">
         ${editing ? '<button type="button" class="btn" data-act="cancel-q">Cancel</button>' : '<button type="button" class="btn" data-act="clear-q">Clear</button>'}
         <button type="button" class="btn primary" id="qf-save" data-act="save-q">${editing ? 'Save changes' : 'Add question'}</button>
       </div>
@@ -1122,7 +1169,7 @@
     const confirming = A.confirm && A.confirm.kind === kind && A.confirm.code === v.code;
     return `<div class="ref-row ${extraClass}">
       <div class="ref-main">
-        <strong>${esc(v.label)}</strong>
+        <strong>${kind === 'theme' ? swatch(themeColor(v.code)) : ''}${esc(v.label)}</strong>
         <span class="hint">${esc(usageText(u))}</span>
         ${confirming ? `<div class="note warn confirm-box" role="alert"><strong>Remove ${esc(v.label)}?</strong>${kind === 'industry' ? ' Its goals are removed too.' : ''}
           <div class="actions"><button type="button" class="btn small" data-act="a-remove-cancel">Keep it</button>
@@ -1461,6 +1508,7 @@
     });
     ['survey', 'surveys', 'questions', 'admin', 'data'].forEach((n) => { $(`#tab-${n}`).hidden = n !== name; });
     if (name === 'data') renderData();
+    if (name === 'survey') fitComposer();
   }
 
   async function start() {
