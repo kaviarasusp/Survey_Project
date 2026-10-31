@@ -101,10 +101,10 @@
 
   // ---------- app state ----------
   const ADMIN = 'admin';
-  const App = { tenant: '', workCustomer: '', tab: 'survey' };
+  const App = { tenant: '', tab: 'survey' };
   const isAdmin = () => App.tenant === ADMIN;
-  // Admin sees every tab; a customer creates and edits its own surveys.
-  const allowedTabs = () => (isAdmin() ? ['survey', 'surveys', 'questions', 'data'] : ['survey', 'surveys']);
+  // Admin sees every tab and every survey; a customer creates and edits its own surveys.
+  const allowedTabs = () => (isAdmin() ? ['survey', 'surveys', 'questions', 'admin', 'data'] : ['survey', 'surveys']);
 
   const newSurveyForm = () => ({ title: '', industry: '', goal: '', audience: '', themes: [], dipstick: 'standard', count: dipstickDefault('standard'), errors: [] });
   let N = null;                                                                         // New survey form
@@ -113,8 +113,19 @@
   const D = { file: 'surveys', confirmReset: false };                                  // XML data tab
 
   const customers = () => readCustomers();
-  // The customer whose surveys the screens show: the signed-in customer, or the one Admin is working on.
-  const currentCustomer = () => customers().find((c) => c.id === (isAdmin() ? App.workCustomer : App.tenant));
+  // The signed-in customer (none when signed in as Admin).
+  const currentCustomer = () => (isAdmin() ? null : customers().find((c) => c.id === App.tenant));
+  // Surveys the signed-in user can see: all for Admin, otherwise the customer's own.
+  const visibleSurveys = () => readSurveys().filter((s) => isAdmin() || s.customer === App.tenant);
+  const ownerOf = (sv) => customers().find((c) => c.id === sv.customer) || null;
+  const ownerName = (sv) => (ownerOf(sv) || { name: 'A4U (Admin)' }).name;
+  // Clients offered when tagging a survey: the owner's clients, or every customer's clients for an Admin survey.
+  const clientsFor = (sv) => {
+    const owner = ownerOf(sv);
+    if (owner) return owner.clients;
+    const seen = new Set();
+    return customers().flatMap((c) => c.clients).filter((c) => !seen.has(c.name.toLowerCase()) && seen.add(c.name.toLowerCase()));
+  };
 
   // ---------- question helpers ----------
   // Allowed question types. Rating scales are 5-point or 7-point; NPS always uses the 0–10 scale.
@@ -187,7 +198,6 @@
   function renderSurvey() {
     const el = $('#tab-survey');
     const customer = currentCustomer();
-    if (!customer) { el.innerHTML = '<div class="card"><p>No customers yet.</p></div>'; return; }
     const f = N;
     const goals = f.industry ? goalsFor(f.industry) : [];
     const ready = f.industry && f.goal && f.audience && f.themes.length;
@@ -289,11 +299,12 @@
     if (!rec.picked.length) { toast('No library questions match. Try another theme or the In-depth Dip Stick.', true); return; }
     const btn = $('#ns-create'); if (btn) btn.disabled = true;
     const id = Store.newId('srv');
+    const owner = customer ? customer.id : '';   // Admin surveys belong to A4U
     try {
       await Store.mutate('surveys', (doc) => {
         const s = doc.createElement('survey');
         const set = (k, v) => s.setAttribute(k, v);
-        set('id', id); set('title', f.title.trim()); set('customer', customer.id);
+        set('id', id); set('title', f.title.trim()); set('customer', owner);
         set('industry', f.industry); set('goal', f.goal); set('audience', f.audience); set('dipstick', f.dipstick);
         set('status', 'draft'); set('createdAt', todayIso());
         f.themes.forEach((t) => { const n = doc.createElement('theme'); n.setAttribute('code', t); s.appendChild(n); });
@@ -356,10 +367,7 @@
     questions: sv.questions.map((q) => ({ ...q, options: [...q.options] })),
   });
   const sameDraft = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-  const selectedSurvey = () => {
-    const c = currentCustomer();
-    return c ? readSurveys().find((s) => s.id === V.selected && s.customer === c.id) : null;
-  };
+  const selectedSurvey = () => visibleSurveys().find((s) => s.id === V.selected) || null;
 
   // A survey question as shown: library wording (or the survey's own wording), type and scale.
   function resolve(item, qmap) {
@@ -372,14 +380,13 @@
   function renderSurveys() {
     const el = $('#tab-surveys');
     const customer = currentCustomer();
-    if (!customer) { el.innerHTML = '<div class="card"><p>No customers yet.</p></div>'; return; }
-    const all = readSurveys().filter((s) => s.customer === customer.id).reverse();
+    const all = visibleSurveys().reverse();
     if (V.selected && !all.some((s) => s.id === V.selected)) { V.selected = ''; V.draft = null; }
     const sel = all.find((s) => s.id === V.selected);
 
     el.innerHTML = `
       <div class="page-head">
-        <div><h1>Surveys</h1><p>Surveys created for <strong>${esc(customer.name)}</strong>. Open one to edit its questions, add more and tag the clients it is for. Saved to <code>surveys.xml</code>.</p></div>
+        <div><h1>Surveys</h1><p>${customer ? `Surveys created by <strong>${esc(customer.name)}</strong>.` : 'Every survey, from all customers and A4U.'} Open one to edit its questions, add more and tag the clients it is for. Saved to <code>surveys.xml</code>.</p></div>
         <button type="button" class="btn primary" data-act="v-new">+ New survey</button>
       </div>
       <div class="cols">
@@ -389,6 +396,7 @@
             <div class="cust-list">
               ${all.map((s) => `<button type="button" class="cust-btn survey-btn" data-act="v-pick" data-id="${esc(s.id)}"${s.id === V.selected ? ' aria-current="true"' : ''}>
                 <span class="survey-btn-title">${esc(s.title)}</span>
+                ${isAdmin() ? `<span class="hint owner">${esc(ownerName(s))}</span>` : ''}
                 <span class="hint">${esc(label('industry', s.industry))} · ${esc(label('survey_goal', s.goal))} · ${s.questions.length} questions</span>
                 <span class="hint">${s.clients.length ? `Clients: ${esc(s.clients.map((c) => c.name).join(', '))}` : 'No clients tagged yet'}</span></button>`).join('')
                 || '<p class="hint">No surveys yet. Create one on <strong>New survey</strong>.</p>'}
@@ -396,19 +404,19 @@
           </div>
         </div>
         <div class="col-main">
-          ${sel ? surveyDetail(sel, customer) : `<div class="card"><p class="hint">${all.length ? 'Select a survey to edit it.' : 'Created surveys will appear here.'}</p></div>`}
+          ${sel ? surveyDetail(sel) : `<div class="card"><p class="hint">${all.length ? 'Select a survey to edit it.' : 'Created surveys will appear here.'}</p></div>`}
         </div>
       </div>`;
     renderAddResults();
   }
 
-  function surveyDetail(sv, customer) {
+  function surveyDetail(sv) {
     if (!V.draft) V.draft = draftOf(sv);
     const d = V.draft;
     const qmap = new Map(readQuestions().map((q) => [q.id, q]));
     const items = d.questions.map((it) => resolve(it, qmap));
     const dirty = !sameDraft(d, draftOf(sv));
-    const known = customer.clients.filter((c) => !d.clients.some((x) => (x.ref && x.ref === c.id) || x.name.toLowerCase() === c.name.toLowerCase()));
+    const known = clientsFor(sv).filter((c) => !d.clients.some((x) => (x.ref && x.ref === c.id) || x.name.toLowerCase() === c.name.toLowerCase()));
     const cf = V.custom;
     return `
       <div class="card">
@@ -433,7 +441,7 @@
             <datalist id="v-client-list">${known.map((c) => `<option value="${esc(c.name)}"></option>`).join('')}</datalist>
             <button type="button" class="btn" data-act="v-tag">Tag client</button>
           </div>
-          <span class="hint">Pick one of ${esc(customer.name)}'s clients or type a new name.</span>
+          <span class="hint">${ownerOf(sv) ? `Pick one of ${esc(ownerName(sv))}'s clients` : 'Pick a client'} or type a new name.</span>
         </div>
       </div>
 
@@ -506,8 +514,8 @@
 
   function renderAddResults() {
     const box = $('#v-add-results');
-    const customer = currentCustomer();
     const sv = selectedSurvey();
+    const customer = sv && ownerOf(sv);
     if (!box || !sv || !V.draft) return;
     const inSurvey = new Set(V.draft.questions.filter((q) => !q.custom).map((q) => q.ref));
     const crit = { industry: sv.industry, goal: sv.goal, audience: sv.audience, themes: sv.themes, dipstick: 'in_depth' };
@@ -572,12 +580,11 @@
   }
 
   function tagClient() {
-    const customer = currentCustomer();
     const name = V.clientName.trim();
     if (!name) { toast('Type or pick a client name.', true); return; }
     const d = V.draft;
     if (d.clients.some((c) => c.name.toLowerCase() === name.toLowerCase())) { toast(`${name} is already tagged.`, true); return; }
-    const known = customer.clients.find((c) => c.name.toLowerCase() === name.toLowerCase());
+    const known = clientsFor(selectedSurvey()).find((c) => c.name.toLowerCase() === name.toLowerCase());
     d.clients.push(known ? { ref: known.id, name: known.name } : { ref: '', name });
     V.clientName = '';
     keepFocus(renderSurveys);
@@ -1030,6 +1037,269 @@
   }
 
   // ======================================================================
+  // ADMIN: industries with their goals, and themes (saved to lookups.xml)
+  // ======================================================================
+  const A = {
+    edit: null,        // { kind, code, label, synonyms } while a row is being edited
+    confirm: null,     // { kind, code } while a removal is being confirmed
+    goalDraft: {},     // industry code -> new goal name being typed
+    newIndustry: { name: '', goals: '', synonyms: '' },
+    newTheme: { name: '', synonyms: '' },
+  };
+  const KIND = { industry: 'industry', goal: 'survey_goal', theme: 'theme' };
+  const KIND_LABEL = { industry: 'industry', goal: 'goal', theme: 'theme' };
+  const splitSyn = (text) => text.split(/[,|]/).map((x) => x.trim()).filter(Boolean);
+
+  function usage(kind, code) {
+    const qs = readQuestions(); const ss = readSurveys();
+    const hitQ = { industry: (q) => q.industry === code, goal: (q) => q.goal === code, theme: (q) => q.themes.includes(code) }[kind];
+    const hitS = { industry: (s) => s.industry === code, goal: (s) => s.goal === code, theme: (s) => s.themes.includes(code) }[kind];
+    return { questions: qs.filter(hitQ).length, surveys: ss.filter(hitS).length };
+  }
+  const usageText = (u) => (u.questions || u.surveys
+    ? `Used by ${u.questions} question${u.questions === 1 ? '' : 's'} and ${u.surveys} survey${u.surveys === 1 ? '' : 's'}`
+    : 'Not used yet');
+
+  function valueRow(kind, v, extraClass = '') {
+    const u = usage(kind, v.code);
+    const inUse = u.questions + u.surveys > 0;
+    const key = `${kind}-${v.code}`;
+    if (A.edit && A.edit.kind === kind && A.edit.code === v.code) {
+      return `<div class="ref-row editing ${extraClass}">
+        <div class="grid">
+          <div class="field"><label class="label" for="ae-label-${key}">Name</label>
+            <input type="text" id="ae-label-${key}" data-act="a-field" data-k="edit.label" value="${esc(A.edit.label)}" maxlength="60"></div>
+          <div class="field"><label class="label" for="ae-syn-${key}">Search synonyms</label>
+            <input type="text" id="ae-syn-${key}" data-act="a-field" data-k="edit.synonyms" value="${esc(A.edit.synonyms)}" placeholder="Comma separated"></div>
+        </div>
+        <div class="actions" style="margin-top:10px"><button type="button" class="btn small" data-act="a-cancel">Cancel</button>
+          <button type="button" class="btn small primary" data-act="a-save">Save</button></div>
+      </div>`;
+    }
+    const confirming = A.confirm && A.confirm.kind === kind && A.confirm.code === v.code;
+    return `<div class="ref-row ${extraClass}">
+      <div class="ref-main">
+        <strong>${esc(v.label)}</strong>
+        <span class="hint">${v.synonyms.length ? `Synonyms: ${esc(v.synonyms.join(', '))}` : 'No synonyms'}</span>
+        <span class="hint">${esc(usageText(u))}</span>
+        ${confirming ? `<div class="note warn confirm-box" role="alert"><strong>Remove ${esc(v.label)}?</strong>${kind === 'industry' ? ' Its goals are removed too.' : ''}
+          <div class="actions"><button type="button" class="btn small" data-act="a-remove-cancel">Keep it</button>
+          <button type="button" class="btn small danger" data-act="a-remove" data-kind="${kind}" data-code="${esc(v.code)}">Remove ${KIND_LABEL[kind]}</button></div></div>` : ''}
+      </div>
+      <div class="ref-actions">
+        <button type="button" class="btn small" data-act="a-edit" data-kind="${kind}" data-code="${esc(v.code)}" aria-label="Edit ${esc(v.label)}">Edit</button>
+        <button type="button" class="btn small danger" data-act="a-ask-remove" data-kind="${kind}" data-code="${esc(v.code)}" aria-label="Remove ${esc(v.label)}"${inUse ? ' disabled title="In use: retire or change the questions and surveys first"' : ''}>Remove</button>
+      </div>
+    </div>`;
+  }
+
+  function renderAdmin() {
+    const el = $('#tab-admin');
+    if (!el || !isAdmin()) return;
+    const inds = LK.facets.industry;
+    el.innerHTML = `
+      <div class="page-head">
+        <div><h1>Admin</h1><p>The industries, goals and themes offered on New survey and in the Question library. Codes stay the same when you rename, so existing questions and surveys keep working. Saved to <code>lookups.xml</code>.</p></div>
+      </div>
+      <div class="cols">
+        <div class="col-main">
+          <div class="card">
+            <h2>Industries and goals</h2>
+            <p class="sub">Each industry has its own goals. After adding an industry, add questions for it in the Question library so New survey has something to recommend.</p>
+            <div class="ref-list">
+              ${inds.map((ind) => `
+                <div class="ind-block">
+                  ${valueRow('industry', ind, 'ind-head')}
+                  <div class="goal-list">
+                    <span class="label">Goals</span>
+                    ${goalsFor(ind.code).map((g) => valueRow('goal', g)).join('') || '<p class="hint">No goals yet.</p>'}
+                    <div class="inline-add">
+                      <input type="text" id="a-goal-${esc(ind.code)}" data-act="a-field" data-k="goal:${esc(ind.code)}" value="${esc(A.goalDraft[ind.code] || '')}" placeholder="New goal for ${esc(ind.label)}" aria-label="New goal for ${esc(ind.label)}" maxlength="60">
+                      <button type="button" class="btn" data-act="a-add-goal" data-ind="${esc(ind.code)}">Add goal</button>
+                    </div>
+                  </div>
+                </div>`).join('')}
+            </div>
+            <div class="custom-box" style="margin-top:18px">
+              <h3>Add an industry</h3>
+              <div class="grid" style="margin-top:10px">
+                <div class="field"><label class="label" for="a-ind-name">Industry name <span class="req">*</span></label>
+                  <input type="text" id="a-ind-name" data-act="a-field" data-k="newIndustry.name" value="${esc(A.newIndustry.name)}" placeholder="e.g. Retail" maxlength="60"></div>
+                <div class="field"><label class="label" for="a-ind-syn">Search synonyms</label>
+                  <input type="text" id="a-ind-syn" data-act="a-field" data-k="newIndustry.synonyms" value="${esc(A.newIndustry.synonyms)}" placeholder="e.g. stores, ecommerce"></div>
+              </div>
+              <div class="field"><label class="label" for="a-ind-goals">Goals <span class="req">*</span></label>
+                <textarea id="a-ind-goals" data-act="a-field" data-k="newIndustry.goals" rows="3" placeholder="One goal per line, e.g.&#10;Store experience&#10;Ecommerce platform">${esc(A.newIndustry.goals)}</textarea></div>
+              <div class="actions"><button type="button" class="btn primary" data-act="a-add-industry">Add industry</button></div>
+            </div>
+          </div>
+        </div>
+        <aside class="col-side static">
+          <div class="card">
+            <h2>Themes</h2>
+            <p class="sub">Offered as choices on New survey and when adding questions.</p>
+            <div class="ref-list">${LK.facets.theme.map((t) => valueRow('theme', t)).join('') || '<p class="hint">No themes yet.</p>'}</div>
+            <div class="custom-box" style="margin-top:16px">
+              <h3>Add a theme</h3>
+              <div class="field" style="margin-top:10px"><label class="label" for="a-theme-name">Theme name <span class="req">*</span></label>
+                <input type="text" id="a-theme-name" data-act="a-field" data-k="newTheme.name" value="${esc(A.newTheme.name)}" placeholder="e.g. Cloud" maxlength="60"></div>
+              <div class="field"><label class="label" for="a-theme-syn">Search synonyms</label>
+                <input type="text" id="a-theme-syn" data-act="a-field" data-k="newTheme.synonyms" value="${esc(A.newTheme.synonyms)}" placeholder="e.g. AWS, Azure, migration"></div>
+              <div class="actions"><button type="button" class="btn primary" data-act="a-add-theme">Add theme</button></div>
+            </div>
+          </div>
+        </aside>
+      </div>`;
+  }
+
+  // A code made from the name, unique within the facet (codes never change after creation).
+  function newCode(facet, labelText) {
+    const base = labelText.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'item';
+    const used = new Set((LK.facets[facet] || []).map((v) => v.code));
+    let code = base; let n = 2;
+    while (used.has(code)) code = `${base}_${n++}`;
+    return code;
+  }
+
+  async function saveLookups(change, okMessage) {
+    try {
+      await Store.mutate('lookups', (doc) => change(doc, doc.documentElement));
+      LK = buildLookups(Store.lookups());
+      toast(okMessage);
+      keepFocus(renderAll);
+      return true;
+    } catch (e) {
+      toast(`Could not save: ${e.message}`, true);
+      return false;
+    }
+  }
+  const facetEl = (root, code) => kids(root, 'facet').find((f) => attr(f, 'code') === code);
+  function addValue(doc, root, facet, code, labelText, synonyms, extra = {}) {
+    const f = facetEl(root, facet);
+    if (!f) throw new Error(`The ${facet} list is missing from lookups.xml.`);
+    const v = doc.createElement('value');
+    v.setAttribute('code', code);
+    Object.entries(extra).forEach(([k, val]) => v.setAttribute(k, val));
+    if (synonyms.length) v.setAttribute('synonyms', synonyms.join('|'));
+    v.textContent = labelText;
+    f.appendChild(v);
+  }
+
+  async function addIndustry() {
+    const name = A.newIndustry.name.trim();
+    const goals = [...new Set(A.newIndustry.goals.split('\n').map((x) => x.trim()).filter(Boolean))];
+    if (!name) { toast('Enter the industry name.', true); return; }
+    if (LK.facets.industry.some((i) => i.label.toLowerCase() === name.toLowerCase())) { toast(`${name} is already an industry.`, true); return; }
+    if (!goals.length) { toast('Add at least one goal for the industry (one per line).', true); return; }
+    const code = newCode('industry', name);
+    const ok = await saveLookups((doc, root) => {
+      addValue(doc, root, 'industry', code, name, splitSyn(A.newIndustry.synonyms));
+      const used = new Set((LK.facets.survey_goal || []).map((v) => v.code));
+      goals.forEach((g) => {
+        let gc = g.toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'goal';
+        const base = gc; let n = 2;
+        while (used.has(gc)) gc = `${base}_${n++}`;
+        used.add(gc);
+        addValue(doc, root, 'survey_goal', gc, g, [], { industry: code });
+      });
+    }, `${name} added with ${goals.length} goal${goals.length === 1 ? '' : 's'}.`);
+    if (ok) { A.newIndustry = { name: '', goals: '', synonyms: '' }; keepFocus(renderAdmin); }
+  }
+
+  async function addGoal(industry) {
+    const name = (A.goalDraft[industry] || '').trim();
+    if (!name) { toast('Type the goal name.', true); return; }
+    if (goalsFor(industry).some((g) => g.label.toLowerCase() === name.toLowerCase())) { toast(`${label('industry', industry)} already has the goal ${name}.`, true); return; }
+    const code = newCode('survey_goal', name);
+    const ok = await saveLookups((doc, root) => addValue(doc, root, 'survey_goal', code, name, [], { industry }),
+      `${name} added to ${label('industry', industry)}.`);
+    if (ok) { A.goalDraft[industry] = ''; keepFocus(renderAdmin); const el = $(`#a-goal-${industry}`); if (el) el.focus(); }
+  }
+
+  async function addTheme() {
+    const name = A.newTheme.name.trim();
+    if (!name) { toast('Enter the theme name.', true); return; }
+    if (LK.facets.theme.some((t) => t.label.toLowerCase() === name.toLowerCase())) { toast(`${name} is already a theme.`, true); return; }
+    const code = newCode('theme', name);
+    const ok = await saveLookups((doc, root) => addValue(doc, root, 'theme', code, name, splitSyn(A.newTheme.synonyms)), `Theme ${name} added.`);
+    if (ok) { A.newTheme = { name: '', synonyms: '' }; keepFocus(renderAdmin); }
+  }
+
+  async function saveEdit() {
+    const e = A.edit;
+    const name = e.label.trim();
+    if (!name) { toast('The name cannot be empty.', true); return; }
+    const facet = KIND[e.kind];
+    const siblings = e.kind === 'goal' ? goalsFor((fv('survey_goal', e.code) || {}).industry) : LK.facets[facet];
+    if (siblings.some((v) => v.code !== e.code && v.label.toLowerCase() === name.toLowerCase())) { toast(`${name} already exists.`, true); return; }
+    const ok = await saveLookups((doc, root) => {
+      const v = kids(facetEl(root, facet), 'value').find((x) => attr(x, 'code') === e.code);
+      if (!v) throw new Error('This item was removed by someone else.');
+      v.textContent = name;
+      const syn = splitSyn(e.synonyms);
+      if (syn.length) v.setAttribute('synonyms', syn.join('|')); else v.removeAttribute('synonyms');
+    }, `${name} saved.`);
+    if (ok) { A.edit = null; keepFocus(renderAdmin); }
+  }
+
+  async function removeValue(kind, code) {
+    const u = usage(kind, code);
+    if (u.questions + u.surveys) { toast(`${label(KIND[kind], code)} is in use and can't be removed.`, true); return; }
+    const name = label(KIND[kind], code);
+    const ok = await saveLookups((doc, root) => {
+      const f = facetEl(root, KIND[kind]);
+      const v = kids(f, 'value').find((x) => attr(x, 'code') === code);
+      if (v) f.removeChild(v);
+      if (kind === 'industry') {
+        const gf = facetEl(root, 'survey_goal');
+        kids(gf, 'value').filter((x) => attr(x, 'industry') === code).forEach((x) => gf.removeChild(x));
+      }
+    }, `${name} removed.`);
+    if (ok) { A.confirm = null; keepFocus(renderAdmin); }
+  }
+
+  function onAdminEvent(ev) {
+    const t = ev.target;
+    if (ev.type === 'input' && t.dataset.act === 'a-field') {
+      const k = t.dataset.k;
+      if (k.startsWith('goal:')) A.goalDraft[k.slice(5)] = t.value;
+      else { const [obj, field] = k.split('.'); if (A[obj]) A[obj][field] = t.value; }
+      return;
+    }
+    if (ev.type === 'keydown' && ev.key === 'Enter' && t.dataset.act === 'a-field' && t.tagName === 'INPUT') {
+      ev.preventDefault();
+      const k = t.dataset.k;
+      if (k.startsWith('goal:')) addGoal(k.slice(5));
+      else if (k.startsWith('edit.')) saveEdit();
+      else if (k.startsWith('newTheme.')) addTheme();
+      else if (k.startsWith('newIndustry.')) addIndustry();
+      return;
+    }
+    if (ev.type !== 'click') return;
+    const b = t.closest('[data-act]');
+    if (!b) return;
+    switch (b.dataset.act) {
+      case 'a-edit': {
+        const v = fv(KIND[b.dataset.kind], b.dataset.code);
+        A.edit = { kind: b.dataset.kind, code: b.dataset.code, label: v.label, synonyms: v.synonyms.join(', ') };
+        A.confirm = null;
+        renderAdmin();
+        const el = $(`#ae-label-${b.dataset.kind}-${b.dataset.code}`); if (el) el.focus();
+        return;
+      }
+      case 'a-cancel': A.edit = null; renderAdmin(); return;
+      case 'a-save': saveEdit(); return;
+      case 'a-ask-remove': A.confirm = { kind: b.dataset.kind, code: b.dataset.code }; A.edit = null; renderAdmin(); return;
+      case 'a-remove-cancel': A.confirm = null; renderAdmin(); return;
+      case 'a-remove': removeValue(b.dataset.kind, b.dataset.code); return;
+      case 'a-add-goal': addGoal(b.dataset.ind); return;
+      case 'a-add-industry': addIndustry(); return;
+      case 'a-add-theme': addTheme(); return;
+      default:
+    }
+  }
+
+  // ======================================================================
   // XML DATA (Admin)
   // ======================================================================
   function renderData() {
@@ -1039,11 +1309,10 @@
       { code: 'surveys', label: 'surveys.xml', where: where('surveys') },
       { code: 'questions', label: 'questions.xml', where: where('questions') },
       { code: 'customers', label: 'customers.xml', where: where('customers') },
-      { code: 'lookups', label: 'lookups.xml', where: 'data/lookups.xml in the project (read-only reference lists)' },
+      { code: 'lookups', label: 'lookups.xml', where: `${where('lookups')} (edited on the Admin screen)` },
     ];
     const file = files.find((x) => x.code === D.file) || files[0];
-    const doc = file.code === 'lookups' ? Store.lookups() : Store.doc(file.code);
-    const xml = Store.serialize(doc);
+    const xml = Store.serialize(Store.doc(file.code));
     el.innerHTML = `
       <div class="page-head">
         <div><h1>XML data</h1><p>The files behind the screens. Every save on the other tabs rewrites one of these.</p></div>
@@ -1075,8 +1344,7 @@
     if (ev.type !== 'click') return;
     switch (t.dataset.act) {
       case 'download': {
-        const doc = D.file === 'lookups' ? Store.lookups() : Store.doc(D.file);
-        const url = URL.createObjectURL(new Blob([Store.serialize(doc)], { type: 'application/xml' }));
+        const url = URL.createObjectURL(new Blob([Store.serialize(Store.doc(D.file))], { type: 'application/xml' }));
         const a = document.createElement('a'); a.href = url; a.download = `${D.file}.xml`; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         return;
@@ -1105,11 +1373,8 @@
     const sel = $('#tenant-select');
     const list = customers();
     if (!isAdmin() && !list.find((c) => c.id === App.tenant)) App.tenant = ADMIN;
-    if (!list.find((c) => c.id === App.workCustomer)) App.workCustomer = list[0] ? list[0].id : '';
     sel.innerHTML = `<option value="${ADMIN}"${isAdmin() ? ' selected' : ''}>Admin (A4U)</option>`
       + `<optgroup label="Customers">${list.map((c) => `<option value="${esc(c.id)}"${c.id === App.tenant ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</optgroup>`;
-    $('#work-customer-wrap').hidden = !isAdmin();
-    $('#work-customer').innerHTML = list.map((c) => `<option value="${esc(c.id)}"${c.id === App.workCustomer ? ' selected' : ''}>${esc(c.name)}</option>`).join('');
     const allowed = allowedTabs();
     document.querySelectorAll('.tabs [role="tab"]').forEach((b) => { b.hidden = !allowed.includes(b.dataset.tab); });
     const badge = $('#storage-badge');
@@ -1125,10 +1390,11 @@
   }
 
   function renderAll() {
+    LK = buildLookups(Store.lookups());
     renderTenant();
     renderSurvey();
     renderSurveys();
-    if (isAdmin()) { renderQuestions(); renderData(); }
+    if (isAdmin()) { renderQuestions(); renderAdmin(); renderData(); }
     if (!allowedTabs().includes(App.tab)) showTab('survey');
   }
 
@@ -1145,7 +1411,7 @@
       b.setAttribute('aria-selected', String(on));
       b.tabIndex = on ? 0 : -1;
     });
-    ['survey', 'surveys', 'questions', 'data'].forEach((n) => { $(`#tab-${n}`).hidden = n !== name; });
+    ['survey', 'surveys', 'questions', 'admin', 'data'].forEach((n) => { $(`#tab-${n}`).hidden = n !== name; });
     if (name === 'data') renderData();
   }
 
@@ -1154,7 +1420,6 @@
       await Store.init();
       LK = buildLookups(Store.lookups());
       App.tenant = ADMIN;
-      App.workCustomer = (customers()[0] || {}).id || '';
       resetScreens();
       $('#loading').hidden = true;
       renderAll();
@@ -1166,7 +1431,6 @@
 
     const switchUser = () => { resetScreens(); renderAll(); };
     $('#tenant-select').addEventListener('change', (e) => { App.tenant = e.target.value; switchUser(); });
-    $('#work-customer').addEventListener('change', (e) => { App.workCustomer = e.target.value; switchUser(); });
     document.querySelector('.tabs').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
     document.querySelector('.tabs').addEventListener('keydown', (e) => {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
@@ -1179,6 +1443,8 @@
     ['change', 'click', 'input'].forEach((t) => sv.addEventListener(t, onSurveyEvent));
     const vs = $('#tab-surveys');
     ['change', 'click', 'input', 'keydown'].forEach((t) => vs.addEventListener(t, onSurveysEvent));
+    const ad = $('#tab-admin');
+    ['change', 'click', 'input', 'keydown'].forEach((t) => ad.addEventListener(t, onAdminEvent));
     const qu = $('#tab-questions');
     ['change', 'click', 'input'].forEach((t) => qu.addEventListener(t, onQuestionsEvent));
     const da = $('#tab-data');

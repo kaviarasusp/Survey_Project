@@ -1,14 +1,13 @@
 /* XML data store.
- * - Reference lists come from data/lookups.xml (read-only).
+ * - Reference lists (lookups.xml) are editable on the Admin screen and saved like the other files.
  * - customers.xml, questions.xml and surveys.xml are read and written as XML.
  *   "shared" mode: saved through /api/xml into a Vercel Blob store (everyone sees the same data).
  *   "local"  mode: saved in this browser (used when no Blob store is connected or when run locally).
  */
 const Store = (() => {
-  const FILES = ['customers', 'questions', 'surveys'];
+  const FILES = ['customers', 'questions', 'surveys', 'lookups'];
   const LS_PREFIX = 'a4u-demo-v2:';   // v2 = simplified survey builder; older demo data is not mixed in
   let mode = 'local';
-  let lookups = null;
   const docs = {};
 
   function parse(text) {
@@ -100,7 +99,6 @@ const Store = (() => {
 
   async function init() {
     mode = await detectMode();
-    lookups = parse(await seedText('lookups'));
     await refresh();
   }
 
@@ -150,6 +148,6 @@ const Store = (() => {
     get mode() { return mode; },
     blobPath: (name) => `a4u-demo-v2/${name}.xml`,
     doc: (name) => docs[name],
-    lookups: () => lookups,
+    lookups: () => docs.lookups,
   };
 })();
