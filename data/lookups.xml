@@ -1,204 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Reference lists (taxonomy). Read-only in the demo; edited by A4U admins in the full product. -->
+<!-- Reference lists for the survey builder. Read-only in the demo; edited by A4U admins in the full product.
+     synonyms="a|b" are extra search words for the Question library and Add questions search. -->
 <lookups>
   <facet code="industry" name="Industry">
     <value code="insurance" synonyms="insurer|carrier|policy|claims|underwriting|P&amp;C|life and annuity">Insurance</value>
-    <value code="retail" synonyms="stores|store|ecommerce|e-commerce|merchandising|point of sale|POS|omnichannel">Retail</value>
-    <value code="manufacturing" synonyms="plant|factory|shop floor|MES|production|supply chain">Manufacturing</value>
+    <value code="manufacturing" synonyms="plant|factory|shop floor|MES|production|supply chain|OEM">Manufacturing</value>
   </facet>
 
-  <facet code="survey_goal" name="Survey goal">
-    <value code="relationship_health" synonyms="pulse|health check|annual survey|CSAT|satisfaction" includeNps="true" description="Periodic, all-round pulse">Relationship health check</value>
-    <value code="pre_renewal" synonyms="renewal|contract end|extension|retention" includeNps="true" description="Spot risks before the contract is up">Pre-renewal check</value>
-    <value code="post_project" synonyms="project closure|close-out|retrospective|go-live|lessons learned" includeNps="false" description="Close-out feedback on a delivery">Post-project review</value>
-    <value code="onboarding" synonyms="transition|kickoff|handover|start-up" includeNps="false" description="How the transition went">Onboarding feedback</value>
-    <value code="post_escalation" synonyms="incident|outage|escalation|P1|Sev1|major incident" includeNps="false" description="After a major incident">Post-escalation follow-up</value>
-    <value code="expansion_discovery" synonyms="upsell|cross-sell|growth|new opportunities|whitespace" includeNps="false" description="Find new areas to help">Account expansion discovery</value>
+  <!-- Goals depend on the industry (industry="…") -->
+  <facet code="survey_goal" name="Goal">
+    <value code="executive_insight" industry="insurance" synonyms="leadership|strategy|C-suite|QBR|business review">Executive insight</value>
+    <value code="csat_services" industry="insurance" synonyms="service satisfaction|service desk|support|tickets|SLA">CSAT Services</value>
+    <value code="project_health" industry="insurance" synonyms="project status|delivery health|schedule|budget|RAG">Project health report</value>
+    <value code="csat" industry="insurance" synonyms="customer satisfaction|satisfaction|pulse">CSAT</value>
+    <value code="product_platform" industry="insurance" synonyms="platform|product|policy admin|core system|roadmap">Product or Platform</value>
+    <value code="product_prelaunch" industry="manufacturing" synonyms="pre-launch|readiness|go-live readiness|launch plan">Product Prelaunch</value>
+    <value code="product_launch_opinion" industry="manufacturing" synonyms="post-launch|launch feedback|launch review|adoption">Product Launch opinion</value>
+    <value code="distributor" industry="manufacturing" synonyms="dealer|channel partner|reseller|distribution|ordering">Distributor</value>
   </facet>
 
-  <facet code="respondent_role" name="Respondent role">
-    <value code="executive_sponsor" synonyms="CXO|CIO|CTO|sponsor|leadership|executive|C-level" maxQuestions="10">Executive sponsor</value>
-    <value code="it_head" synonyms="IT director|head of IT|IT leader|VP IT" maxQuestions="20">IT head</value>
-    <value code="program_manager" synonyms="PM|PMO|delivery manager|project manager" maxQuestions="25">Program manager</value>
-    <value code="procurement" synonyms="vendor management|sourcing|purchasing" maxQuestions="12">Procurement</value>
-    <value code="business_user" synonyms="business stakeholder|business owner|product owner" maxQuestions="15">Business user</value>
-    <value code="end_user" synonyms="end users|staff|employee" maxQuestions="10">End user</value>
+  <facet code="audience" name="Audience">
+    <value code="cxo" description="CEO, CIO, CTO, COO and other executives" synonyms="CXO|C-level|executive|sponsor|leadership|CIO|CTO|CEO">CXO</value>
+    <value code="non_cxo" description="Managers, team leads and business users" synonyms="manager|team lead|business user|end user|operations|staff">Non-CXO</value>
   </facet>
 
-  <facet code="service_line" name="Service line">
-    <value code="app_development" synonyms="software development|build|coding|AD">Application development</value>
-    <value code="app_maintenance" synonyms="AMS|application support|L2|L3|bug fixing">Application maintenance</value>
-    <value code="infra_managed" synonyms="infrastructure|IMS|servers|network|data center">Infrastructure managed services</value>
-    <value code="cloud_ops" synonyms="cloud|AWS|Azure|GCP|DevOps">Cloud operations</value>
-    <value code="service_desk" synonyms="help desk|helpdesk|L1|tickets|ticketing|IT support">Service desk</value>
-    <value code="cybersecurity" synonyms="security|SOC|infosec|cyber">Cybersecurity</value>
-    <value code="data_analytics" synonyms="data|analytics|BI|dashboards">Data &amp; analytics</value>
-    <value code="qa_testing" synonyms="testing|QA|quality assurance|test automation">QA / testing</value>
-    <value code="consulting" synonyms="advisory|strategy|assessment">Consulting</value>
+  <facet code="theme" name="Theme">
+    <value code="ai" synonyms="artificial intelligence|GenAI|generative AI|machine learning|ML|automation|copilot|chatbot|model">AI</value>
+    <value code="outsourcing" synonyms="managed services|vendor|supplier|offshore|service levels|SLA|delivery|partner|staffing">Outsourcing</value>
   </facet>
 
-  <facet code="engagement_model" name="Engagement model">
-    <value code="time_materials" synonyms="T&amp;M|TM|time and materials|hourly|rate card" short="T&amp;M" hasSlas="false" defaultWorkType="change">Time &amp; materials</value>
-    <value code="fixed_price" synonyms="fixed bid|fixed cost|FP|lump sum" short="Fixed price" hasSlas="false" defaultWorkType="project">Fixed price</value>
-    <value code="managed_services" synonyms="MSP|managed service|outsourcing|SLA-based" short="Managed services" hasSlas="true" defaultWorkType="run">Managed services (SLA-based)</value>
-    <value code="staff_augmentation" synonyms="staff aug|contractors|staffing" short="Staff aug" hasSlas="false" defaultWorkType="change">Staff augmentation</value>
-    <value code="outcome_based" synonyms="outcome|value based|gain share|risk reward" short="Outcome-based" hasSlas="false" defaultWorkType="project">Outcome-based</value>
+  <facet code="dipstick" name="Dip Stick">
+    <value code="standard" questions="10" minutes="5" description="Core questions only">Standard</value>
+    <value code="in_depth" questions="18" minutes="12" description="Core questions plus deeper follow-ups">In-depth</value>
   </facet>
-
-  <facet code="work_type" name="Type of work">
-    <value code="run" synonyms="support|BAU|keep the lights on|KTLO|operations" short="Run">Run (support &amp; maintenance)</value>
-    <value code="change" synonyms="enhancement|enhancements|minor change|CR" short="Change">Change (enhancements)</value>
-    <value code="project" synonyms="implementation|rollout|program" short="Project">Project (fixed-scope delivery)</value>
-  </facet>
-
-  <facet code="lifecycle_stage" name="Lifecycle stage">
-    <value code="pre_sales" synonyms="pilot|POC|proof of concept|presales" priority="1">Pre-sales / pilot</value>
-    <value code="transition" synonyms="onboarding|handover|knowledge transfer|KT" priority="3" durationDays="90">Transition</value>
-    <value code="steady_state" synonyms="BAU|ongoing|steady" priority="2">Steady state</value>
-    <value code="pre_renewal" synonyms="renewal|contract end" priority="5" startsDaysBeforeEnd="180">Pre-renewal</value>
-    <value code="exit" synonyms="offboarding|termination|reverse transition" priority="4">Exit</value>
-  </facet>
-
-  <tiers>
-    <tier code="strategic" length="in_depth" roles="executive_sponsor it_head">Strategic</tier>
-    <tier code="key" length="standard" roles="it_head program_manager">Key</tier>
-    <tier code="standard" length="pulse" roles="program_manager">Standard</tier>
-  </tiers>
-
-  <lengths>
-    <length code="pulse" minutes="3" questions="6">Pulse</length>
-    <length code="standard" minutes="8" questions="14">Standard</length>
-    <length code="in_depth" minutes="15" questions="22">In-depth</length>
-  </lengths>
-
-  <themes>
-    <theme code="delivery_quality" synonyms="quality|delivery|deliverables|output" label="Delivery quality">
-      <subtheme code="accuracy_of_deliverables" synonyms="first time right|requirements">Accuracy of deliverables</subtheme>
-      <subtheme code="defects_rework" synonyms="bugs|quality issues">Defects &amp; rework</subtheme>
-      <subtheme code="consistency" synonyms="reliability">Consistency</subtheme>
-      <subtheme code="adherence_to_standards" synonyms="process|standards">Adherence to standards</subtheme>
-    </theme>
-    <theme code="communication" synonyms="updates|responsiveness|communicate|meetings" label="Communication">
-      <subtheme code="responsiveness" synonyms="ticket turnaround|response time">Responsiveness</subtheme>
-      <subtheme code="proactive_updates" synonyms="status updates|risk alerts|early warning|no surprises">Proactive updates</subtheme>
-      <subtheme code="escalation_handling" synonyms="incidents|escalations">Escalation handling</subtheme>
-      <subtheme code="meeting_effectiveness" synonyms="status meetings|QBR quality">Meeting effectiveness</subtheme>
-    </theme>
-    <theme code="collaboration" synonyms="teamwork|partnering|working together" label="Collaboration">
-      <subtheme code="partnership" synonyms="relationship">Partnership</subtheme>
-      <subtheme code="joint_problem_solving" synonyms="working together">Joint problem-solving</subtheme>
-      <subtheme code="knowledge_sharing" synonyms="KT|knowledge transfer|documentation">Knowledge sharing</subtheme>
-    </theme>
-    <theme code="value_addition" synonyms="value add|innovation|improvement|ideas" label="Value addition">
-      <subtheme code="proactive_improvement" synonyms="new ideas|innovation">Proactive improvement ideas</subtheme>
-      <subtheme code="automation_efficiency" synonyms="automation|tooling">Automation &amp; efficiency</subtheme>
-      <subtheme code="cost_savings" synonyms="savings|cost reduction">Cost savings delivered</subtheme>
-      <subtheme code="technology_adoption" synonyms="modernisation|modernization">Technology adoption</subtheme>
-    </theme>
-    <theme code="commercials" synonyms="commercial|money|pricing|cost|contract" label="Commercials">
-      <subtheme code="value_for_money" synonyms="pricing|cost">Value for money</subtheme>
-      <subtheme code="billing_accuracy" synonyms="invoices|billing">Billing accuracy</subtheme>
-      <subtheme code="renewal_intent" synonyms="renewal|churn">Renewal intent</subtheme>
-    </theme>
-    <theme code="governance" synonyms="oversight|reporting|steering|controls" label="Governance">
-      <subtheme code="reporting_cadence" synonyms="reports|status reports">Reporting cadence</subtheme>
-      <subtheme code="executive_reviews" synonyms="QBR|business review">Executive reviews</subtheme>
-      <subtheme code="risk_management" synonyms="risks|RAID">Risk management</subtheme>
-      <subtheme code="sla_management" synonyms="SLA|service levels">SLA management</subtheme>
-    </theme>
-    <theme code="people" synonyms="team|staff|resources|talent" label="People">
-      <subtheme code="expertise" synonyms="skills|knowledge">Expertise</subtheme>
-      <subtheme code="attitude_ownership" synonyms="ownership|attitude">Attitude &amp; ownership</subtheme>
-      <subtheme code="team_stability" synonyms="attrition|turnover">Team stability</subtheme>
-      <subtheme code="onboarding_new_staff" synonyms="ramp-up">Onboarding of new staff</subtheme>
-    </theme>
-    <theme code="security_compliance" synonyms="security|compliance|privacy|audit" label="Security &amp; compliance">
-      <subtheme code="data_protection" synonyms="data security|privacy">Data protection</subtheme>
-      <subtheme code="access_control" synonyms="access|permissions">Access control</subtheme>
-      <subtheme code="regulatory_compliance" synonyms="regulation|compliance">Regulatory compliance</subtheme>
-      <subtheme code="incident_handling" synonyms="security incidents">Incident handling</subtheme>
-    </theme>
-    <theme code="business_outcomes" synonyms="outcomes|impact|results|ROI" label="Business outcomes">
-      <subtheme code="impact_on_goals" synonyms="business impact|outcomes">Impact on business goals</subtheme>
-      <subtheme code="time_to_market" synonyms="speed|delivery speed">Time to market</subtheme>
-      <subtheme code="user_adoption" synonyms="usage|adoption">User adoption</subtheme>
-      <subtheme code="operational_stability" synonyms="uptime|availability|stability">Operational stability</subtheme>
-    </theme>
-  </themes>
-
-  <problems>
-    <problem code="churn_risk" synonyms="losing the client|retention|at risk|unhappy client" label="Churn risk">
-      <link subtheme="value_for_money" weight="3"/><link subtheme="renewal_intent" weight="3"/>
-      <link subtheme="proactive_improvement" weight="2"/><link subtheme="consistency" weight="2"/>
-      <link subtheme="impact_on_goals" weight="2"/><link subtheme="partnership" weight="1"/>
-    </problem>
-    <problem code="pricing_concerns" synonyms="too expensive|cost|price|pricing|budget" label="Pricing concerns">
-      <link subtheme="value_for_money" weight="3"/><link subtheme="cost_savings" weight="3"/><link subtheme="billing_accuracy" weight="2"/>
-    </problem>
-    <problem code="missed_deadlines" synonyms="late|delays|slippage|overdue|on time" label="Missed deadlines">
-      <link subtheme="accuracy_of_deliverables" weight="3"/><link subtheme="proactive_updates" weight="2"/><link subtheme="risk_management" weight="1"/>
-    </problem>
-    <problem code="communication_gaps" synonyms="no updates|poor communication|surprises" label="Communication gaps">
-      <link subtheme="proactive_updates" weight="3"/><link subtheme="responsiveness" weight="3"/>
-      <link subtheme="reporting_cadence" weight="2"/><link subtheme="meeting_effectiveness" weight="2"/>
-    </problem>
-    <problem code="team_turnover" synonyms="people leaving|staff churn|rotation|attrition" label="Team turnover">
-      <link subtheme="team_stability" weight="3"/><link subtheme="onboarding_new_staff" weight="2"/><link subtheme="knowledge_sharing" weight="1"/>
-    </problem>
-    <problem code="lack_of_innovation" synonyms="no new ideas|stagnant|innovation" label="Lack of innovation">
-      <link subtheme="proactive_improvement" weight="3"/><link subtheme="technology_adoption" weight="3"/><link subtheme="automation_efficiency" weight="2"/>
-    </problem>
-    <problem code="quality_issues" synonyms="bugs|defects|rework|errors" label="Quality issues">
-      <link subtheme="defects_rework" weight="3"/><link subtheme="adherence_to_standards" weight="2"/><link subtheme="consistency" weight="2"/>
-    </problem>
-    <problem code="slow_resolution" synonyms="ticket turnaround|slow tickets|MTTR|resolution time|backlog" label="Slow issue resolution">
-      <link subtheme="responsiveness" weight="3"/><link subtheme="escalation_handling" weight="3"/><link subtheme="sla_management" weight="2"/>
-    </problem>
-    <problem code="poor_exec_visibility" synonyms="no visibility|leadership updates|QBR|steering committee" label="Poor executive visibility">
-      <link subtheme="executive_reviews" weight="3"/><link subtheme="reporting_cadence" weight="2"/><link subtheme="impact_on_goals" weight="2"/>
-    </problem>
-    <problem code="security_concerns" synonyms="breach|data leak|vulnerability" label="Security concerns">
-      <link subtheme="data_protection" weight="3"/><link subtheme="access_control" weight="2"/>
-      <link subtheme="regulatory_compliance" weight="2"/><link subtheme="incident_handling" weight="2"/>
-    </problem>
-    <problem code="scope_disputes" synonyms="scope creep|change requests|out of scope" label="Scope disputes">
-      <link subtheme="joint_problem_solving" weight="2"/><link subtheme="partnership" weight="2"/><link subtheme="billing_accuracy" weight="2"/>
-    </problem>
-    <problem code="low_adoption" synonyms="not used|shelfware|usage" label="Low adoption of deliverables">
-      <link subtheme="user_adoption" weight="3"/><link subtheme="impact_on_goals" weight="2"/><link subtheme="knowledge_sharing" weight="1"/>
-    </problem>
-  </problems>
-
-  <!-- Suggestions used to pre-fill the survey context screen -->
-  <links>
-    <link type="stage_suggests_goal" from="pre_sales" to="relationship_health"/>
-    <link type="stage_suggests_goal" from="transition" to="onboarding"/>
-    <link type="stage_suggests_goal" from="steady_state" to="relationship_health"/>
-    <link type="stage_suggests_goal" from="pre_renewal" to="pre_renewal"/>
-    <link type="stage_suggests_goal" from="exit" to="post_project"/>
-
-    <link type="goal_suggests_theme" from="relationship_health" to="delivery_quality communication collaboration value_addition"/>
-    <link type="goal_suggests_theme" from="pre_renewal" to="commercials value_addition delivery_quality communication"/>
-    <link type="goal_suggests_theme" from="post_project" to="delivery_quality governance business_outcomes"/>
-    <link type="goal_suggests_theme" from="onboarding" to="people collaboration communication"/>
-    <link type="goal_suggests_theme" from="post_escalation" to="communication delivery_quality governance"/>
-    <link type="goal_suggests_theme" from="expansion_discovery" to="value_addition business_outcomes collaboration"/>
-
-    <link type="goal_suggests_problem" from="relationship_health" to="quality_issues missed_deadlines communication_gaps"/>
-    <link type="goal_suggests_problem" from="pre_renewal" to="churn_risk pricing_concerns lack_of_innovation"/>
-    <link type="goal_suggests_problem" from="post_project" to="missed_deadlines quality_issues scope_disputes"/>
-    <link type="goal_suggests_problem" from="onboarding" to="team_turnover communication_gaps"/>
-    <link type="goal_suggests_problem" from="post_escalation" to="slow_resolution communication_gaps"/>
-    <link type="goal_suggests_problem" from="expansion_discovery" to="lack_of_innovation low_adoption"/>
-
-    <link type="goal_suggests_role" from="post_project" to="program_manager"/>
-    <link type="goal_suggests_role" from="onboarding" to="program_manager"/>
-    <link type="goal_suggests_role" from="pre_renewal" to="executive_sponsor procurement"/>
-
-    <link type="model_typical_service_line" from="managed_services" to="app_maintenance infra_managed service_desk cloud_ops"/>
-    <link type="model_typical_service_line" from="time_materials" to="app_development qa_testing data_analytics"/>
-    <link type="model_typical_service_line" from="fixed_price" to="app_development qa_testing consulting"/>
-  </links>
 
   <scales>
     <scale code="agree_5" favourable="4" name="5-point agreement">

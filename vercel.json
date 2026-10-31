@@ -3,6 +3,10 @@
     {
       "source": "/data/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
+      "source": "/(|index.html)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
     }
   ]
 }

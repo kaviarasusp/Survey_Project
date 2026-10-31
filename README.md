@@ -1,44 +1,50 @@
 # A4U Survey Builder (demo)
 
-A working demo of the A4U survey portal. It's plain HTML and JavaScript with no build step, and all data is stored as XML.
+A working demo of the A4U survey builder. It's plain HTML and JavaScript with no build step, and all data is stored as XML.
 
 **Signed in as** (top right) picks who is using the demo:
 
-- **Admin (A4U)** sees every tab. A second list, **Working on customer**, chooses whose clients and surveys are shown.
-- **A customer** (an IT service provider) sees only **New survey**, **Surveys** and **Clients**, and only its own data.
+- **Admin (A4U)** sees every tab. A second list, **Working on customer**, chooses whose surveys are shown.
+- **A customer** (an IT service provider) sees only **New survey** and **Surveys**, and only its own surveys.
 
-| Screen | Who | What it shows |
+| Screen | Who | What it does |
 |---|---|---|
-| **New survey** | All | Pick a client and its engagements. Industry, tier, models, type of work, lifecycle stage, line of business, goal, themes, roles, contacts and length are pre-filled. Recommended questions update as you change anything. **Save survey** writes to `surveys.xml`. |
-| **Surveys** | All | Every saved survey for the customer, filterable by client. Open one to see its questions; remove or reorder them, search the library (with an optional "fits this survey" filter) and add more, then **Save changes**. |
-| **Customers & clients** (Admin) / **Clients** (customer) | All | Admin adds customers. Clients can be added or **edited** with lines of business, engagements and contacts. Saved to `customers.xml`; edits keep the existing IDs so saved surveys still match. |
-| **Question library** | Admin | Search (including synonyms, e.g. "QBR", "ticket turnaround"), filter by theme and status, and add questions. Each question can be **edited**, **retired** (hidden from new surveys, kept in saved ones, can be reactivated) or **deleted** (only when no saved survey uses it). Saved to `questions.xml`. |
+| **New survey** | All | Five choices: **Survey title**, **Industry** (Insurance, Manufacturing), **Goal** (depends on the industry), **CXO or non-CXO**, **Themes** (AI, Outsourcing), plus **Dip Stick** (Standard or In-depth). The right pane shows the recommended survey; the **number of questions** is editable. **Create survey** picks the questions and opens the survey for editing. |
+| **Surveys** | All | Every survey for the customer. Open one to edit the title, **tag clients** (one of the customer's clients or a new name), edit each question's wording for this survey, reorder or remove questions, add questions from the library (search with a "fits this survey" filter) or **write a new question** for this survey. **Save changes** writes to `surveys.xml`. |
+| **Question library** | Admin | Add a question: **Question text**, **Question type**, **Scale** (answer options for multiple choice and ranking), and where it is used: Industry, Goal, CXO / non-CXO, Themes and Dip Stick. **Search and edit** below: edit, retire, reactivate, or delete a question that no survey uses. Saved to `questions.xml`. |
 | **XML data** | Admin | View or download every XML file, reload, or reset the demo data. |
+
+Goals by industry:
+
+| Insurance | Manufacturing |
+|---|---|
+| Executive insight, CSAT Services, Project health report, CSAT, Product or Platform | Product Prelaunch, Product Launch opinion, Distributor |
+
+## How questions are picked
+
+A library question is offered for a survey when it has the same **industry**, its **goal** is the survey's goal (or "all goals" for that industry), it is tagged for the chosen **CXO / non-CXO** audience, and it covers at least one chosen **theme**. **Standard** surveys use Standard questions; **In-depth** surveys use Standard and In-depth questions. Standard suggests 10 questions and In-depth 18; the number can be changed. The NPS question comes first and one open question last. If fewer questions match than requested, the right pane says so and you can add or write more after creating the survey.
 
 ## How search works
 
-The search box on **Surveys → Add questions** and in the **Question library** matches:
-
-1. **Question text** (keywords), and
-2. the label and **search synonyms** of every taxonomy entry in `lookups.xml`: themes, sub-themes, concerns (problems), and the values of industry, survey goal, respondent role, service line, engagement model, type of work and lifecycle stage.
-
-When the search text matches a taxonomy entry, the questions mapped to it are returned. For example, "QBR" finds Executive reviews questions; "ticket turnaround" finds Responsiveness questions and those linked to the *Slow issue resolution* concern; "claims" finds questions tagged for Insurance. Results are ranked (text and sub-theme matches first), the screen shows what the search was interpreted as, and each result says why it matched. Synonyms are edited in `lookups.xml` (`synonyms="a|b|c"`); after editing, run `node tools/build-seed.mjs`.
+The search box on **Surveys → Add questions** and in the **Question library** matches the question text plus the names and **search synonyms** in `lookups.xml` for industries, goals, CXO / non-CXO, themes and Dip Stick. For example "GenAI" finds AI questions, "dealer" finds Distributor questions and "claims" finds Insurance questions. Each result says why it matched. Synonyms are edited in `lookups.xml` (`synonyms="a|b|c"`); after editing, run `node tools/build-seed.mjs`.
 
 ## How data is stored
 
 ```
-data/lookups.xml     reference lists (industries, goals, roles, themes, scales…)   read-only
-data/customers.xml   seed data: customers → clients → LOBs, engagements, contacts
-data/questions.xml   seed data: question library
+data/lookups.xml     reference lists (industries, goals, audiences, themes, Dip Stick, scales)   read-only
+data/customers.xml   seed data: customers and their clients (offered when tagging a survey)
+data/questions.xml   seed data: question library (96 sample questions)
 data/surveys.xml     seed data: empty
 api/xml.js           Vercel Function that reads/writes the three editable files
 js/seed-data.js      built-in copy of data/*.xml, used only when index.html is opened from disk
 ```
 
-- **Shared mode** (recommended for the demo): with a Vercel Blob store connected, `api/xml.js` saves `customers.xml`, `questions.xml` and `surveys.xml` to the store. Everyone using the link sees the same data. The header shows **Shared XML storage**.
+- **Shared mode** (recommended for the demo): with a Vercel Blob store connected, `api/xml.js` saves `customers.xml`, `questions.xml` and `surveys.xml` to the store under `a4u-demo-v2/`. Everyone using the link sees the same data. The header shows **Shared XML storage**.
 - **Browser mode**: without a Blob store (or when run with a plain local web server), the same XML is saved in the browser. Each person sees only their own changes. The header shows **Saved in this browser** and a yellow banner.
 
 Until the first save, the app reads the seed files in `data/`. **XML data → Reset demo data** goes back to them.
+
+This version stores its data separately from the earlier demo (folder `a4u-demo-v2/` in Blob storage, `a4u-demo-v2:` in the browser), so it starts from the new sample data and the earlier demo's files are left untouched.
 
 Vercel's servers can't keep files written to their own disk, which is why saved XML goes to Blob storage rather than back into `data/`.
 
@@ -71,13 +77,13 @@ If you edit any file in `data/`, run `node tools/build-seed.mjs` so the built-in
 
 ## Suggested demo for your leader
 
-1. Signed in as **Admin (A4U)**, working on Vertex IT Services. **New survey**: Harbor Mutual Insurance is pre-selected. Point out that the stage comes from contract dates and suggests the goal. Untick *Group benefits · T&M · Change* and watch "your services" change to "Claims operations" in the questions.
-2. Tick a concern such as *Slow issue resolution* and watch matching questions join the list. **Save survey**.
-3. **Surveys**: open the survey, remove a question, move one up, search "QBR" and add a question, then **Save changes**.
-4. **Customers & clients**: add a customer, then a client with two lines of business, an engagement and two contacts. Click **Edit** on any client to change it.
-5. **Question library**: add a question, mark it private, and see it offered only to that customer. Edit an existing question, retire one (it disappears from New survey and Add questions but stays in saved surveys), then filter Status → Retired and reactivate it.
-6. Switch **Signed in as** to a customer. Only New survey, Surveys and Clients remain, showing that customer's data only.
-7. Ask your leader to open the same link on their machine. They will see the same customers, clients, questions and surveys.
+1. Signed in as **Admin (A4U)**, working on Vertex IT Services. **New survey**: type a title, pick **Insurance**, and show that **Goal** lists the five Insurance goals; switch to **Manufacturing** to show its three.
+2. Pick Insurance → **Executive insight**, **CXO**, theme **AI**. The right pane shows 10 recommended questions. Change the number to 8, then switch Dip Stick to **In-depth** (the number moves to 18 and the pane says how many match).
+3. **Create survey**. The survey opens on **Surveys**: reword a question, move one up, remove one, search "GenAI" and add a question, and **Write a new question**.
+4. **Tag clients**: pick Harbor Mutual Insurance from the list and type a new client name. **Save changes**.
+5. **Question library**: add a question for Manufacturing → Distributor, Non-CXO, AI, In-depth. Search "dealer" to find it; edit it, retire another one, then filter Status → Retired and reactivate it.
+6. Switch **Signed in as** to Vertex IT Services. Only New survey and Surveys remain, with that customer's surveys.
+7. Ask your leader to open the same link on their machine. They will see the same questions and surveys.
 
 ## Limits of the demo
 

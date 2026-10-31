@@ -6,7 +6,7 @@
  */
 const Store = (() => {
   const FILES = ['customers', 'questions', 'surveys'];
-  const LS_PREFIX = 'a4u-demo:';
+  const LS_PREFIX = 'a4u-demo-v2:';   // v2 = simplified survey builder; older demo data is not mixed in
   let mode = 'local';
   let lookups = null;
   const docs = {};
@@ -148,6 +148,7 @@ const Store = (() => {
   return {
     init, refresh, reset, mutate, serialize, newId,
     get mode() { return mode; },
+    blobPath: (name) => `a4u-demo-v2/${name}.xml`,
     doc: (name) => docs[name],
     lookups: () => lookups,
   };

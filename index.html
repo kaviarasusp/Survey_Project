@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>A4U Survey Builder</title>
-  <meta name="description" content="Demo of the A4U survey portal: customers and clients, question library and survey creation, with data stored as XML.">
+  <meta name="description" content="Demo of the A4U survey builder: create surveys from the question library, edit their questions and tag clients, with data stored as XML.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -33,7 +33,6 @@
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button type="button" role="tab" id="tab-btn-survey" aria-controls="tab-survey" aria-selected="true" data-tab="survey">New survey</button>
     <button type="button" role="tab" id="tab-btn-surveys" aria-controls="tab-surveys" aria-selected="false" data-tab="surveys">Surveys</button>
-    <button type="button" role="tab" id="tab-btn-customers" aria-controls="tab-customers" aria-selected="false" data-tab="customers">Customers &amp; clients</button>
     <button type="button" role="tab" id="tab-btn-questions" aria-controls="tab-questions" aria-selected="false" data-tab="questions">Question library</button>
     <button type="button" role="tab" id="tab-btn-data" aria-controls="tab-data" aria-selected="false" data-tab="data">XML data</button>
   </nav>
@@ -43,7 +42,6 @@
   <main>
     <section id="tab-survey" class="tab" role="tabpanel" aria-labelledby="tab-btn-survey"></section>
     <section id="tab-surveys" class="tab" role="tabpanel" aria-labelledby="tab-btn-surveys" hidden></section>
-    <section id="tab-customers" class="tab" role="tabpanel" aria-labelledby="tab-btn-customers" hidden></section>
     <section id="tab-questions" class="tab" role="tabpanel" aria-labelledby="tab-btn-questions" hidden></section>
     <section id="tab-data" class="tab" role="tabpanel" aria-labelledby="tab-btn-data" hidden></section>
     <div id="loading" class="loading">Loading XML data…</div>
@@ -51,8 +49,8 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-  <script src="js/seed-data.js"></script>
-  <script src="js/store.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/seed-data.js?v=2"></script>
+  <script src="js/store.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
 </body>
 </html>

@@ -207,3 +207,32 @@ pre.xml { margin: 0; max-height: 620px; overflow: auto; padding: 16px; border-ra
 .confirm-box { margin-top: 10px; }
 .confirm-box .actions { margin-top: 8px; justify-content: flex-start; }
 @media (max-width: 640px) { .qcard { flex-direction: column; } .q-actions { flex-direction: row; flex-wrap: wrap; } }
+
+/* Simplified survey builder */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.chip:has(input:disabled) { opacity: .5; cursor: not-allowed; }
+select:disabled { background: var(--bg); color: var(--muted); }
+.count-row { display: flex; flex-direction: column; gap: 6px; }
+.stepper { display: inline-flex; align-items: center; gap: 6px; }
+.stepper input[type="number"] { width: 84px; min-height: 42px; padding: 6px 8px; border: 1px solid #C9CDC5; border-radius: 8px; background: var(--surface); color: var(--fg);
+  font: inherit; font-family: var(--mono); font-size: 20px; text-align: center; font-variant-numeric: tabular-nums; }
+.stepper .step { width: 42px; height: 42px; border: 1px solid #C9CDC5; border-radius: 8px; background: var(--surface); color: var(--fg); font-size: 20px; }
+.stepper .step:disabled { opacity: .4; cursor: not-allowed; }
+.form-section { font-size: 15px !important; margin: 24px 0 2px; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+
+.qedit-list { display: flex; flex-direction: column; gap: 8px; }
+.qedit { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 8px; background: var(--bg); }
+.qedit .n { font-family: var(--mono); color: var(--muted); padding-top: 9px; }
+.qedit-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.qedit textarea { min-height: 0; font-size: 15px; background: var(--surface); }
+.qedit .meta { font-size: 12px; color: var(--muted); }
+.btn.link.inline { min-height: 0; padding: 0; font-size: 12px; vertical-align: baseline; }
+.unsaved { margin-right: auto; padding: 6px 10px; }
+
+.client-tag { gap: 2px; padding-right: 2px; font-size: 13px; min-height: 30px; background: var(--accent-soft); color: var(--accent-ink); }
+.tag-x { width: 26px; height: 26px; font-size: 15px; color: var(--accent-ink); }
+.inline-add { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.inline-add input { flex: 1 1 240px; width: auto; }
+.custom-box { margin-top: 14px; padding: 16px; border: 1px dashed #B7BDB3; border-radius: var(--radius); }
+.qcard.is-editing { border: 2px solid var(--accent); padding: 13px 15px; }
+#q-list-card { margin-top: 18px; }

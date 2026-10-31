@@ -12,7 +12,7 @@
 import { put, get, del } from '@vercel/blob';
 
 const FILES = { customers: 'customers', questions: 'questions', surveys: 'surveys' }; // name -> root element
-const PREFIX = 'a4u-demo/';
+const PREFIX = 'a4u-demo-v2/';   // v2 = simplified survey builder (older demo files are left untouched)
 const ACCESS = process.env.BLOB_ACCESS === 'public' ? 'public' : 'private';
 const MAX_BYTES = 1_000_000;
 
